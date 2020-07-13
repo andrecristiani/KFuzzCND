@@ -5,6 +5,7 @@ import FuzzyProject.Fuzz.Models.*;
 import FuzzyProject.Fuzz.Models.Evaluation.AcuraciaMedidas;
 import FuzzyProject.Fuzz.Utils.DistanceMeasures;
 import FuzzyProject.Fuzz.Utils.Evaluation;
+import FuzzyProject.Fuzz.Utils.FuzzyFunctions;
 import FuzzyProject.Fuzz.Utils.HandlesFiles;
 import org.apache.commons.math3.ml.clustering.CentroidCluster;
 import org.apache.commons.math3.ml.clustering.FuzzyKMeansClusterer;
@@ -23,12 +24,17 @@ public class OnlinePhase {
     int acertosTotal = 0;
     int erros = 0;
     int errosTotal = 0;
+    Ensemble ensemble;
 
-
+    int novidadesClassificadas = 0;
+    int exemplosClassificados = 0;
+    public int fpGlobal;
+    public int fnGlobal;
 
     public void initialize(String caminho, String dataset, Ensemble comite, int latencia, int tChunk, int T, int kShort, double phi) {
 
         List<AcuraciaMedidas> acuracias = new ArrayList<>();
+        this.ensemble = comite;
         DataSource source;
         Instances data;
         Instances esperandoTempo;
@@ -50,13 +56,15 @@ public class OnlinePhase {
                 Instance ins = data.get(i);
                 Example exemplo = new Example(ins.toDoubleArray(), true);
                 double rotulo = comite.classify(ins);
+                exemplo.setRotuloClassificado(rotulo);
                 if(rotulo == exemplo.getRotuloVerdadeiro()) {
                     acertos++;
                     acertosTotal++;
                 } else if (rotulo == -1) {
+                    desconhecido++;
                     unkMem.add(exemplo);
                     if(unkMem.size() >= T) {
-//                        unkMem = this.detectaNovidadesBinarioFuzzyCMeans(unkMem, kShort, comite, phi);
+                        unkMem = this.binaryNoveltyDetection(unkMem, kShort, phi, 1);
                     }
                 } else {
                     erros++;
@@ -94,63 +102,76 @@ public class OnlinePhase {
         }
     }
 
-//    private List<Example> detectaNovidadesBinarioFuzzyCMeans(List<Example> listaDesconhecidos, int kCurto, ComiteArvores comite, double phi) {
-//        FuzzyKMeansClusterer clusters = this.fuzzyCMeans(listaDesconhecidos, kCurto);
-//        List<CentroidCluster> centroides = clusters.getClusters();
-//        List<Double> silhuetas = this.calculaSilhuetaFuzzy2(clusters, listaDesconhecidos);
-//        List<Integer> silhuetasValidas = new ArrayList<>();
-//        double[][] matrizPertinencia = clusters.getMembershipMatrix().getData();
-//
-//        for(int i=0; i<silhuetas.size(); i++) {
-//            if(silhuetas.get(i) > 0 && centroides.get(i).getPoints().size() >= pesoMinimoGrupo) {
-//                silhuetasValidas.add(i);
-//            }
-//        }
-//
-//        List<SPFMiC> sfMiCS = FuncoesDeClassificacao.separaExemplosPorGrupoClassificado(listaDesconhecidos, clusters, this.fuzzificacao, alpha, betha);
-//        List<SPFMiC> sfmicsConhecidos = comite.getTodosSFMiCs();
-//        List<Double> frs = new ArrayList<>();
-//
-//        for(int i=0; i<sfMiCS.size(); i++) {
-//            if(!sfMiCS.get(i).isNull()) {
-//                frs.clear();
-//                for (int j = 0; j < sfmicsConhecidos.size(); j++) {
-//                    double di = sfmicsConhecidos.get(j).getDispersao();
-//                    double dj = sfMiCS.get(i).getDispersao();
-//                    double dist = (di + dj) / DistanceMeasures.calculaDistanciaEuclidiana(sfmicsConhecidos.get(j).getCentroide(), sfMiCS.get(i).getCentroide());
-//                    frs.add((di + dj) / dist);
-//                }
-//
-//                Double maxVal = Collections.min(frs);
-//                int indexMax = frs.indexOf(maxVal);
-//                if (maxVal > phi) {
-//                    sfMiCS.get(i).setRotulo(sfmicsConhecidos.get(indexMax).getRotulo());
-//                } else {
-//                    sfMiCS.get(i).setRotulo(-2);
-//                }
-//            }
-//        }
-//
-//        for(int i=0; i<listaDesconhecidos.size(); i++) {
-//            int cluster = this.getIndiceDoMaiorValor(matrizPertinencia[i]);
-//            if(silhuetasValidas.contains(cluster)) {
-//                listaDesconhecidos.get(i).setRotuloClassificado(sfMiCS.get(cluster).getRotulo());
-//                listaDesconhecidos.remove(i);
-//            }
-//        }
-//
-//        return listaDesconhecidos;
-//    }
-//
-//    private int getIndiceDoMaiorValor(double[] array) {
-//        int index = 0;
-//        double maior = -1000000;
-//        for(int i=0; i<array.length; i++) {
-//            if(array[i] > maior && array[i] < 1){
-//                index = i;
-//                maior = array[i];
-//            }
-//        }
-//        return index;
-//    }
+    private List<Example> binaryNoveltyDetection(List<Example> listaDesconhecidos, int kCurto, double phi, int minWeight) {
+        FuzzyKMeansClusterer clusters = FuzzyFunctions.fuzzyCMeans(listaDesconhecidos, kCurto, this.ensemble.fuzzification);
+        List<CentroidCluster> centroides = clusters.getClusters();
+        List<Double> silhuetas = FuzzyFunctions.fuzzySilhouette(clusters, listaDesconhecidos, this.ensemble.alpha);
+        List<Integer> silhuetasValidas = new ArrayList<>();
+        double[][] matrizPertinencia = clusters.getMembershipMatrix().getData();
+
+        for(int i=0; i<silhuetas.size(); i++) {
+            if(silhuetas.get(i) > 0 && centroides.get(i).getPoints().size() >= minWeight) {
+                silhuetasValidas.add(i);
+            }
+        }
+
+        List<SPFMiC> sfMiCS = FuzzyFunctions.separateExamplesByClusterClassifiedByFuzzyCMeans(listaDesconhecidos, clusters, -1, this.ensemble.alpha, this.ensemble.theta);
+        List<SPFMiC> sfmicsConhecidos = ensemble.getAllSPFMiCs();
+        List<Double> frs = new ArrayList<>();
+
+        for(int i=0; i<sfMiCS.size(); i++) {
+            if(!sfMiCS.get(i).isNull()) {
+                frs.clear();
+                for (int j = 0; j < sfmicsConhecidos.size(); j++) {
+                    double di = sfmicsConhecidos.get(j).getDispersao();
+                    double dj = sfMiCS.get(i).getDispersao();
+                    double dist = (di + dj) / DistanceMeasures.calculaDistanciaEuclidiana(sfmicsConhecidos.get(j).getCentroide(), sfMiCS.get(i).getCentroide());
+                    frs.add((di + dj) / dist);
+                }
+
+                Double minFr = Collections.min(frs);
+                int indexMinFr = frs.indexOf(minFr);
+                if (minFr <= phi) {
+                    sfMiCS.get(i).setRotulo(sfmicsConhecidos.get(indexMinFr).getRotulo());
+                } else {
+                    sfMiCS.get(i).setRotulo(-2);
+                }
+            }
+        }
+
+        for(int i=0; i<listaDesconhecidos.size(); i++) {
+            int cluster = this.getIndiceDoMaiorValor(matrizPertinencia[i]);
+            if(silhuetasValidas.contains(cluster)) {
+                listaDesconhecidos.get(i).setRotuloClassificado(sfMiCS.get(cluster).getRotulo());
+                novidadesClassificadas++;
+                exemplosClassificados++;
+                if(this.ensemble.knowLabels.contains(listaDesconhecidos.get(i).getRotuloVerdadeiro()) && listaDesconhecidos.get(i).getRotuloClassificado() == -2) {
+//                    fp++;
+                    fpGlobal++;
+                    errosTotal++;
+                }else if(this.ensemble.knowLabels.contains(listaDesconhecidos.get(i).getRotuloVerdadeiro()) && listaDesconhecidos.get(i).getRotuloClassificado() != listaDesconhecidos.get(i).getRotuloVerdadeiro()) {
+//                    fe++;
+//                    feGlobal++;
+                    errosTotal++;
+                } else {
+                    acertosTotal++;
+                }
+                listaDesconhecidos.remove(i);
+            }
+        }
+
+        return listaDesconhecidos;
+    }
+
+    private int getIndiceDoMaiorValor(double[] array) {
+        int index = 0;
+        double maior = -1000000;
+        for(int i=0; i<array.length; i++) {
+            if(array[i] > maior && array[i] < 1){
+                index = i;
+                maior = array[i];
+            }
+        }
+        return index;
+    }
 }

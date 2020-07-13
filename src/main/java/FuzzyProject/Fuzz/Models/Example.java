@@ -10,15 +10,8 @@ import java.util.Enumeration;
 public class Example implements Instance, Clusterable {
     private double[] ponto;
     private double rotuloVerdadeiro;
-    private String rotuloClassificado;
+    private double rotuloClassificado;
     private boolean desconhecido;
-
-    public Example(double[] ponto) {
-        this.ponto = ponto;
-        this.rotuloVerdadeiro = -1;
-        this.rotuloClassificado = null;
-        this.desconhecido = false;
-    }
 
     public Example(Instance instance) {
         this.ponto = instance.toDoubleArray();
@@ -47,11 +40,11 @@ public class Example implements Instance, Clusterable {
         this.rotuloVerdadeiro = rotuloVerdadeiro;
     }
 
-    public String getRotuloClassificado() {
+    public double getRotuloClassificado() {
         return this.rotuloClassificado;
     }
 
-    public void setRotuloClassificado(String rotuloClassificado) {
+    public void setRotuloClassificado(double rotuloClassificado) {
         this.rotuloClassificado = rotuloClassificado;
     }
 

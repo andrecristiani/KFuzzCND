@@ -25,53 +25,12 @@ public class FuzzySystem {
         ConverterUtils.DataSource source1;
         Instances data1;
 
-        ConverterUtils.DataSource source2;
-        Instances data2;
-
-        ConverterUtils.DataSource source3;
-        Instances data3;
-
-        ConverterUtils.DataSource source4;
-        Instances data4;
-
-        ConverterUtils.DataSource source5;
-        Instances data5;
-
-        ConverterUtils.DataSource source6;
-        Instances data6;
-
-
         source1 = new ConverterUtils.DataSource(caminho + dataset + "-train.arff");
         data1 = source1.getDataSet();
         data1.setClassIndex(data1.numAttributes() - 1);
 
-//        source2 = new ConverterUtils.DataSource(caminho + dataset + "-train2.arff");
-//        data2 = source2.getDataSet();
-//        data2.setClassIndex(data2.numAttributes() - 1);
-
-//        source3 = new ConverterUtils.DataSource(caminho + dataset + "-train3.arff");
-//        data3 = source3.getDataSet();
-//        data3.setClassIndex(data3.numAttributes() - 1);
-//
-//        source4 = new ConverterUtils.DataSource(caminho + dataset + "-train4.arff");
-//        data4 = source4.getDataSet();
-//        data4.setClassIndex(data4.numAttributes() - 1);
-//
-//        source5 = new ConverterUtils.DataSource(caminho + dataset + "-train5.arff");
-//        data5 = source5.getDataSet();
-//        data5.setClassIndex(data5.numAttributes() - 1);
-//
-//        source6 = new ConverterUtils.DataSource(caminho + dataset + "-train6.arff");
-//        data6 = source6.getDataSet();
-//        data6.setClassIndex(data6.numAttributes() - 1);
-
         List<Instances> chunks = new ArrayList<>();
         chunks.add(data1);
-//        chunks.add(data2);
-//        chunks.add(data3);
-//        chunks.add(data4);
-//        chunks.add(data5);
-//        chunks.add(data6);
 
         //MOA
 //        FaseOffline faseOffline = new FaseOffline();
@@ -130,7 +89,7 @@ public class FuzzySystem {
         Ensemble ensemble = offlinePhase.inicializar("moa", current + "/moa/", 6, data1, fuzzyfication, alpha, theta, 2000, 4);
         OnlinePhase onlinePhase = new OnlinePhase();
         ensemble.allTipMax = new MaxTipicity(0.95);
-        ensemble.thetaAdapter = 0.30;
+        ensemble.thetaAdapter = 0.31;
         ensemble.N = 2;
         onlinePhase.initialize(current + "/moa/", "moa", ensemble, 2000, 2000, 40, 4, 0.5);
     }

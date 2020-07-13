@@ -23,8 +23,8 @@ public class Ensemble {
     public int N;
     public MaxTipicity allTipMax;
     public double thetaAdapter = 0;
-    public List<J48> modelos = new ArrayList<>();
     public List<Map<Double, List<SPFMiC>>> ensembleOfClassifiers = new ArrayList<>();
+    public List<Double> knowLabels = new ArrayList<>();
 
     public Ensemble(String dataset, String caminho, int tamanhoMaximo, double fuzzification, double alpha, double theta, int C, int K) {
         this.dataset = dataset;
@@ -48,7 +48,10 @@ public class Ensemble {
                 Map<Double, List<SPFMiC>> classifier = new HashMap<>();
                 classes.addAll(examplesByClass.keySet());
                 for(int j=0; j<examplesByClass.size(); j++) {
-                    FuzzyKMeansClusterer clusters = fuzzyCMeans(examplesByClass.get(classes.get(j)), this.K);
+                    if(!this.knowLabels.contains(classes.get(j))) {
+                        this.knowLabels.add(classes.get(j));
+                    }
+                    FuzzyKMeansClusterer clusters = FuzzyFunctions.fuzzyCMeans(examplesByClass.get(classes.get(j)), this.K, this.fuzzification);
                     List<SPFMiC> spfmics = FuzzyFunctions.separateExamplesByClusterClassifiedByFuzzyCMeans(examplesByClass.get(classes.get(j)), clusters, classes.get(j), this.alpha, this.theta);
                     classifier.put(classes.get(j), spfmics);
                 }
@@ -132,7 +135,10 @@ public class Ensemble {
         classes.addAll(examplesByClass.keySet());
         for(int j=0; j<examplesByClass.size(); j++) {
             if(examplesByClass.get(classes.get(j)).size() >= this.K) {
-                FuzzyKMeansClusterer clusters = fuzzyCMeans(examplesByClass.get(classes.get(j)), this.K);
+                if(!this.knowLabels.contains(classes.get(j))) {
+                    this.knowLabels.add(classes.get(j));
+                }
+                FuzzyKMeansClusterer clusters = FuzzyFunctions.fuzzyCMeans(examplesByClass.get(classes.get(j)), this.K, this.fuzzification);
                 List<SPFMiC> spfmics = FuzzyFunctions.separateExamplesByClusterClassifiedByFuzzyCMeans(examplesByClass.get(classes.get(j)), clusters, classes.get(j), this.theta, this.alpha);
                 classifier.put(classes.get(j), spfmics);
             } else {
@@ -143,11 +149,11 @@ public class Ensemble {
         return newChunk;
     }
 
-    private FuzzyKMeansClusterer fuzzyCMeans(List<Example> examples, int K) {
-        FuzzyKMeansClusterer fuzzyClusterer = new FuzzyKMeansClusterer(K, this.fuzzification);
-        fuzzyClusterer.cluster(examples);
-        return fuzzyClusterer;
-    }
+//    private FuzzyKMeansClusterer fuzzyCMeans(List<Example> examples, int K) {
+//        FuzzyKMeansClusterer fuzzyClusterer = new FuzzyKMeansClusterer(K, this.fuzzification);
+//        fuzzyClusterer.cluster(examples);
+//        return fuzzyClusterer;
+//    }
 
     private Map<Double, List<Example>> separateByClasses(List<Example> chunk) {
         Map<Double, List<Example>> examplesByClass = new HashMap<>();
@@ -225,6 +231,15 @@ public class Ensemble {
         keys.addAll(classifier.keySet());
         for(int i=0; i<classifier.size(); i++) {
             spfMiCS.addAll(classifier.get(keys.get(i)));
+        }
+        return spfMiCS;
+    }
+
+    public List<SPFMiC> getAllSPFMiCs() {
+        List<SPFMiC> spfMiCS = new ArrayList<>();
+        for(int i=0; i<this.ensembleOfClassifiers.size(); i++) {
+            Map<Double, List<SPFMiC>> classifier = this.ensembleOfClassifiers.get(i);
+            spfMiCS.addAll(this.getAllSPFMiCsFromClassifier(classifier));
         }
         return spfMiCS;
     }
