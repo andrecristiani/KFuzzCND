@@ -53,6 +53,9 @@ public class OnlinePhase {
 
             int desconhecido = 0;
             for(int i=0, j=0, h=0; i<data.size(); i++, j++, h++) {
+                if(i==25000) {
+                    System.out.println(i);
+                }
                 Instance ins = data.get(i);
                 Example exemplo = new Example(ins.toDoubleArray(), true);
                 double rotulo = comite.classify(ins);
@@ -64,7 +67,7 @@ public class OnlinePhase {
                     desconhecido++;
                     unkMem.add(exemplo);
                     if(unkMem.size() >= T) {
-                        unkMem = this.binaryNoveltyDetection(unkMem, kShort, phi, 1);
+                        unkMem = this.newBinaryNoveltyDetection(unkMem, kShort, phi, T);
                     }
                 } else {
                     erros++;
@@ -82,7 +85,7 @@ public class OnlinePhase {
                     nExeTemp++;
                 }
 
-                if(h == 730) {
+                if(h == 1000) {
                     h=0;
                     acuracias.add(Evaluation.calculaAcuracia(acertos, 730, i));
                     System.out.println("I: " + i + "|| erros: " + erros);
@@ -95,6 +98,7 @@ public class OnlinePhase {
             System.out.println("Acertos: " + acertosTotal);
             System.out.println("Erros: " + errosTotal);
             System.out.println("Desconhecidos: " + desconhecido);
+            System.out.println("Sem classificar: " + unkMem.size());
 
         } catch (Exception ex) {
             System.out.println(ex);
@@ -102,12 +106,13 @@ public class OnlinePhase {
         }
     }
 
-    private List<Example> binaryNoveltyDetection(List<Example> listaDesconhecidos, int kCurto, double phi, int minWeight) {
-        FuzzyKMeansClusterer clusters = FuzzyFunctions.fuzzyCMeans(listaDesconhecidos, kCurto, this.ensemble.fuzzification);
+    private List<Example> newBinaryNoveltyDetection(List<Example> listaDesconhecidos, int kCurto, double phi, int T) {
+        System.out.println("Executando DN");
+        int minWeight = T/4;
+        FuzzyKMeansClusterer clusters = FuzzyFunctions.fuzzyCMeans(listaDesconhecidos, 1, this.ensemble.fuzzification);
         List<CentroidCluster> centroides = clusters.getClusters();
         List<Double> silhuetas = FuzzyFunctions.fuzzySilhouette(clusters, listaDesconhecidos, this.ensemble.alpha);
         List<Integer> silhuetasValidas = new ArrayList<>();
-        double[][] matrizPertinencia = clusters.getMembershipMatrix().getData();
 
         for(int i=0; i<silhuetas.size(); i++) {
             if(silhuetas.get(i) > 0 && centroides.get(i).getPoints().size() >= minWeight) {
@@ -115,16 +120,25 @@ public class OnlinePhase {
             }
         }
 
-        List<SPFMiC> sfMiCS = FuzzyFunctions.separateExamplesByClusterClassifiedByFuzzyCMeans(listaDesconhecidos, clusters, -1, this.ensemble.alpha, this.ensemble.theta);
+        List<SPFMiC> sfMiCS = FuzzyFunctions.newSeparateExamplesByClusterClassifiedByFuzzyCMeans(listaDesconhecidos, clusters, -1, this.ensemble.alpha, this.ensemble.theta, minWeight);
         List<SPFMiC> sfmicsConhecidos = ensemble.getAllSPFMiCs();
         List<Double> frs = new ArrayList<>();
+        List<List<Double>> frsList = new ArrayList<>();
 
         for(int i=0; i<sfMiCS.size(); i++) {
             if(!sfMiCS.get(i).isNull()) {
                 frs.clear();
+                double dist2 = Double.MAX_VALUE;
+                SPFMiC spfMiCMenorDistancia = new SPFMiC();
                 for (int j = 0; j < sfmicsConhecidos.size(); j++) {
-                    double di = sfmicsConhecidos.get(j).getDispersao();
-                    double dj = sfMiCS.get(i).getDispersao();
+                    double dist3 = DistanceMeasures.calculaDistanciaEuclidiana(sfMiCS.get(i).getCentroide(), sfmicsConhecidos.get(j).getCentroide());
+                    if(dist3 < dist2) {
+                        dist2 = dist3;
+                        spfMiCMenorDistancia = sfmicsConhecidos.get(j);
+                    }
+
+                    double di = sfmicsConhecidos.get(j).getRadius();
+                    double dj = sfMiCS.get(i).getRadius();
                     double dist = (di + dj) / DistanceMeasures.calculaDistanciaEuclidiana(sfmicsConhecidos.get(j).getCentroide(), sfMiCS.get(i).getCentroide());
                     frs.add((di + dj) / dist);
                 }
@@ -132,31 +146,41 @@ public class OnlinePhase {
                 Double minFr = Collections.min(frs);
                 int indexMinFr = frs.indexOf(minFr);
                 if (minFr <= phi) {
+                    sfMiCS.get(i).minFr = minFr;
+                    sfMiCS.get(i).rotuloMenorDistancia = spfMiCMenorDistancia.getRotulo();
                     sfMiCS.get(i).setRotulo(sfmicsConhecidos.get(indexMinFr).getRotulo());
                 } else {
+                    sfMiCS.get(i).minFr = minFr;
+                    sfMiCS.get(i).rotuloMenorDistancia = spfMiCMenorDistancia.getRotulo();
                     sfMiCS.get(i).setRotulo(-2);
+
                 }
+                frsList.add(frs);
             }
         }
 
-        for(int i=0; i<listaDesconhecidos.size(); i++) {
-            int cluster = this.getIndiceDoMaiorValor(matrizPertinencia[i]);
-            if(silhuetasValidas.contains(cluster)) {
-                listaDesconhecidos.get(i).setRotuloClassificado(sfMiCS.get(cluster).getRotulo());
-                novidadesClassificadas++;
-                exemplosClassificados++;
-                if(this.ensemble.knowLabels.contains(listaDesconhecidos.get(i).getRotuloVerdadeiro()) && listaDesconhecidos.get(i).getRotuloClassificado() == -2) {
+        for(int i=0; i<centroides.size(); i++) {
+            if(silhuetasValidas.contains(i)) {
+                List<Example> examplesOfCluster = centroides.get(i).getPoints();
+                for(int j=0; j<examplesOfCluster.size(); j++) {
+                    examplesOfCluster.get(j).setRotuloClassificado(sfMiCS.get(i).getRotulo());
+                    novidadesClassificadas++;
+                    exemplosClassificados++;
+                    if (this.ensemble.knowLabels.contains(examplesOfCluster.get(j).getRotuloVerdadeiro()) && examplesOfCluster.get(j).getRotuloClassificado() == -2) {
 //                    fp++;
-                    fpGlobal++;
-                    errosTotal++;
-                }else if(this.ensemble.knowLabels.contains(listaDesconhecidos.get(i).getRotuloVerdadeiro()) && listaDesconhecidos.get(i).getRotuloClassificado() != listaDesconhecidos.get(i).getRotuloVerdadeiro()) {
+                        fpGlobal++;
+                        errosTotal++;
+                      System.err.println("Verdadeiro: " + examplesOfCluster.get(j).getRotuloVerdadeiro() + " classificou como: " + examplesOfCluster.get(j).getRotuloClassificado() + " FR: " + sfMiCS.get(i).minFr + " rótulo menor distância: " + sfMiCS.get(i).rotuloMenorDistancia + " Cluster: " + i);
+                    } else if (this.ensemble.knowLabels.contains(examplesOfCluster.get(j).getRotuloVerdadeiro()) && examplesOfCluster.get(j).getRotuloClassificado() != examplesOfCluster.get(j).getRotuloVerdadeiro()) {
 //                    fe++;
 //                    feGlobal++;
-                    errosTotal++;
-                } else {
-                    acertosTotal++;
+                        errosTotal++;
+                        System.err.println("Verdadeiro: " + examplesOfCluster.get(j).getRotuloVerdadeiro() + " classificou como: " + examplesOfCluster.get(j).getRotuloClassificado() + " FR: " + sfMiCS.get(i).minFr + " rótulo menor distância: " + sfMiCS.get(i).rotuloMenorDistancia + " Cluster: " + i);
+                    } else {
+                        acertosTotal++;
+                    }
+                    listaDesconhecidos.remove(examplesOfCluster.get(j));
                 }
-                listaDesconhecidos.remove(i);
             }
         }
 

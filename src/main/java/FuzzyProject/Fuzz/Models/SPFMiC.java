@@ -15,6 +15,8 @@ public class SPFMiC {
     private double alpha;
     private double theta;
     private boolean isNull;
+    public double minFr;
+    public double rotuloMenorDistancia;
 
     public SPFMiC(double[] centroide, int N, double alpha, double theta) {
         this.CF1pertinencias = centroide;
@@ -200,7 +202,7 @@ public class SPFMiC {
         return  (this.SSDe / this.Mm);
     }
 
-    public double getDispersao() {
+    public double getRadius() {
         return Math.sqrt((this.SSDe/this.N));
     }
 }

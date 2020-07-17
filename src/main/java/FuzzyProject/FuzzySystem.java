@@ -91,7 +91,15 @@ public class FuzzySystem {
         ensemble.allTipMax = new MaxTipicity(0.95);
         ensemble.thetaAdapter = 0.31;
         ensemble.N = 2;
-        onlinePhase.initialize(current + "/moa/", "moa", ensemble, 2000, 2000, 40, 4, 0.5);
+        onlinePhase.initialize(current + "/moa/", "moa", ensemble, 2000, 2000, 80, 4, 0.8);
+
+//        OfflinePhase offlinePhase = new OfflinePhase();
+//        Ensemble ensemble = offlinePhase.inicializar(dataset, current + "/"+dataset+"/", 12, data1, fuzzyfication, alpha, theta, 152148, 32);
+//        OnlinePhase onlinePhase = new OnlinePhase();
+//        ensemble.allTipMax = new MaxTipicity(0.70);
+//        ensemble.thetaAdapter = 0.60;
+//        ensemble.N = 2;
+//        onlinePhase.initialize(current + "/"+dataset+"/", dataset, ensemble, 2000, 15000, 40, 4, 0.5);
     }
 }
 

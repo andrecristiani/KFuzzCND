@@ -102,11 +102,48 @@ public class FuzzyFunctions {
                 }
             }
             if(sfMiC != null) {
-                if(sfMiC.getN() >= 1) {
+                if(sfMiC.getN() >= 20) {
                     sfMiC.setSSDe(SSD);
-                    sfMiCS.add(sfMiC);
                 }
             }
+            sfMiCS.add(sfMiC);
+        }
+        return sfMiCS;
+    }
+
+    public static List<SPFMiC> newSeparateExamplesByClusterClassifiedByFuzzyCMeans(List<Example> exemplos, FuzzyKMeansClusterer fuzzyClusterer, double rotulo, double alpha, double theta, int minWeight) {
+        List<SPFMiC> sfMiCS = new ArrayList<SPFMiC>();
+        double[][] matriz = fuzzyClusterer.getMembershipMatrix().getData();
+        List<CentroidCluster> centroides = fuzzyClusterer.getClusters();
+        for(int j=0; j<centroides.size(); j++) {
+            SPFMiC sfMiC = null;
+            double SSD = 0;
+            List<Example> examples = centroides.get(j).getPoints();
+            for(int k=0; k<examples.size(); k++) {
+                int indexExample = exemplos.indexOf(examples.get(k));
+                if (sfMiC == null) {
+                    sfMiC = new SPFMiC(centroides.get(j).getCenter().getPoint(),
+                            centroides.get(j).getPoints().size(),
+                            alpha,
+                            theta);
+                    sfMiC.setRotulo(rotulo);
+                    double valorPertinencia = matriz[indexExample][j];
+                    double[] ex = exemplos.get(k).getPonto();
+                    double distancia = DistanceMeasures.calculaDistanciaEuclidiana(sfMiC.getCentroide(), ex);
+                    SSD += distancia * Math.pow(valorPertinencia, 2);
+                } else {
+                    double valorPertinencia = matriz[k][j];
+                    double[] ex = exemplos.get(k).getPonto();
+                    double distancia = DistanceMeasures.calculaDistanciaEuclidiana(sfMiC.getCentroide(), ex);
+                    SSD += distancia * Math.pow(valorPertinencia, 2);
+                }
+            }
+            if(sfMiC != null) {
+                if(sfMiC.getN() >= minWeight) {
+                    sfMiC.setSSDe(SSD);
+                }
+            }
+            sfMiCS.add(sfMiC);
         }
         return sfMiCS;
     }

@@ -246,18 +246,46 @@ public class Ensemble {
 
     public double classify(List<SPFMiC> spfMiCS, Example example) {
         List<Double> tipicidades = new ArrayList<>();
+        boolean isOutlier = true;
         for(int i=0; i<spfMiCS.size(); i++) {
             tipicidades.add(spfMiCS.get(i).calculaTipicidade(example.getPonto(), this.N, this.K));
+            double distancia = DistanceMeasures.calculaDistanciaEuclidiana(example, spfMiCS.get(i).getCentroide());
+            if(distancia <= spfMiCS.get(i).getRadius()) {
+                isOutlier = false;
+            }
         }
+
+        if(isOutlier) {
+            return -1;
+        }
+
+//        if(isOutlier == true) {
+//            System.err.print("Outlier");
+//        }
 
         Double maxVal = Collections.max(tipicidades);
         int indexMax = tipicidades.indexOf(maxVal);
+//        System.out.println("Maior rótulo: " + spfMiCS.get(indexMax).getRotulo());
+//        double rotulo = spfMiCS.get(indexMax).getRotulo();
+//                spfMiCS.remove(spfMiCS.get(indexMax));
+//        tipicidades.remove(maxVal);
+//        Double maxVal2 = Collections.max(tipicidades);
+//        int indexMax2 = tipicidades.indexOf(maxVal2);
+//        System.out.println("Segundo Maior rótulo: " + spfMiCS.get(indexMax2).getRotulo());
+//        tipicidades.remove(maxVal2);
+//        spfMiCS.remove(spfMiCS.get(indexMax2));
+//        Double maxVal3 = Collections.max(tipicidades);
+//        int indexMax3 = tipicidades.indexOf(maxVal3);
+//        System.out.println("Terceiro Maior rótulo: " + spfMiCS.get(indexMax3).getRotulo());
+//        tipicidades.remove(maxVal3);
+//        spfMiCS.remove(spfMiCS.get(indexMax3));
 //        System.out.println("Tipicidade maxima: " + maxVal);
-        double limiar = (this.allTipMax.getValorMedio() - this.thetaAdapter);
-        if(maxVal >= limiar) {
-            this.allTipMax.addValorTipicidade(maxVal);
+//        double limiar = (this.allTipMax.getValorMedio() - this.thetaAdapter);
+//        if(maxVal >= limiar) {
+//            this.allTipMax.addValorTipicidade(maxVal);
             return spfMiCS.get(indexMax).getRotulo();
-        }
-        return -1;
+//            return rotulo;
+//        }
+//        return -1;
     }
 }
