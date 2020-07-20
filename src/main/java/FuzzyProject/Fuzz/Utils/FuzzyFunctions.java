@@ -50,6 +50,7 @@ public class FuzzyFunctions {
             }
             double fs = numerador / denominador;
             silhuetas.add(fs);
+            System.out.println(fs);
         }
         return silhuetas;
     }
@@ -66,7 +67,7 @@ public class FuzzyFunctions {
         return resultado;
     }
 
-    public static List<SPFMiC> separateExamplesByClusterClassifiedByFuzzyCMeans(List<Example> exemplos, FuzzyKMeansClusterer fuzzyClusterer, double rotulo, double alpha, double theta) {
+    public static List<SPFMiC> separateExamplesByClusterClassifiedByFuzzyCMeans(List<Example> exemplos, FuzzyKMeansClusterer fuzzyClusterer, double rotulo, double alpha, double theta, int minWeight) {
         List<SPFMiC> sfMiCS = new ArrayList<SPFMiC>();
         double[][] matriz = fuzzyClusterer.getMembershipMatrix().getData();
         List<CentroidCluster> centroides = fuzzyClusterer.getClusters();
@@ -83,30 +84,24 @@ public class FuzzyFunctions {
                                 theta);
                         sfMiC.setRotulo(rotulo);
                         double valorPertinencia = matriz[k][j];
-//                        sfMiC.addPointToMm(valorPertinencia);
                         double[] ex = exemplos.get(k).getPonto();
                         double distancia = DistanceMeasures.calculaDistanciaEuclidiana(sfMiC.getCentroide(), ex);
-//                        SSD += valorPertinencia * Math.pow(distancia, 2);
                         SSD += distancia * Math.pow(valorPertinencia, 2);
-//                        SSD += Math.pow(valorPertinencia, 2) * Math.pow(distancia, 2);
 
                     } else {
                         double valorPertinencia = matriz[k][j];
                         double[] ex = exemplos.get(k).getPonto();
                         double distancia = DistanceMeasures.calculaDistanciaEuclidiana(sfMiC.getCentroide(), ex);
-//                        SSD += valorPertinencia * Math.pow(distancia, 2);
                         SSD += distancia * Math.pow(valorPertinencia, 2);
-//                        SSD += Math.pow(valorPertinencia, 2) * Math.pow(distancia, 2);
-//                        sfMiC.addPointToMm(valorPertinencia);
                     }
                 }
             }
             if(sfMiC != null) {
-                if(sfMiC.getN() >= 20) {
+                if(sfMiC.getN() >= minWeight) {
                     sfMiC.setSSDe(SSD);
+                    sfMiCS.add(sfMiC);
                 }
             }
-            sfMiCS.add(sfMiC);
         }
         return sfMiCS;
     }

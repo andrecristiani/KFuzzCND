@@ -107,9 +107,9 @@ public class OnlinePhase {
     }
 
     private List<Example> newBinaryNoveltyDetection(List<Example> listaDesconhecidos, int kCurto, double phi, int T) {
-        System.out.println("Executando DN");
+//        System.out.println("Executando DN");
         int minWeight = T/4;
-        FuzzyKMeansClusterer clusters = FuzzyFunctions.fuzzyCMeans(listaDesconhecidos, 1, this.ensemble.fuzzification);
+        FuzzyKMeansClusterer clusters = FuzzyFunctions.fuzzyCMeans(listaDesconhecidos, kCurto, this.ensemble.fuzzification);
         List<CentroidCluster> centroides = clusters.getClusters();
         List<Double> silhuetas = FuzzyFunctions.fuzzySilhouette(clusters, listaDesconhecidos, this.ensemble.alpha);
         List<Integer> silhuetasValidas = new ArrayList<>();

@@ -21,12 +21,13 @@ public class Ensemble {
     public int C;
     public int K;
     public int N;
+    public int minWeight;
     public MaxTipicity allTipMax;
     public double thetaAdapter = 0;
     public List<Map<Double, List<SPFMiC>>> ensembleOfClassifiers = new ArrayList<>();
     public List<Double> knowLabels = new ArrayList<>();
 
-    public Ensemble(String dataset, String caminho, int tamanhoMaximo, double fuzzification, double alpha, double theta, int C, int K) {
+    public Ensemble(String dataset, String caminho, int tamanhoMaximo, double fuzzification, double alpha, double theta, int C, int K, int minWeight) {
         this.dataset = dataset;
         this.caminho = caminho;
         this.tamanhoMaximo = tamanhoMaximo;
@@ -35,6 +36,7 @@ public class Ensemble {
         this.theta = theta;
         this.C = C;
         this.K = K;
+        this.minWeight = minWeight;
     }
 
     public void trainInitialEnsemble(Instances trainSet) throws Exception {
@@ -52,7 +54,7 @@ public class Ensemble {
                         this.knowLabels.add(classes.get(j));
                     }
                     FuzzyKMeansClusterer clusters = FuzzyFunctions.fuzzyCMeans(examplesByClass.get(classes.get(j)), this.K, this.fuzzification);
-                    List<SPFMiC> spfmics = FuzzyFunctions.separateExamplesByClusterClassifiedByFuzzyCMeans(examplesByClass.get(classes.get(j)), clusters, classes.get(j), this.alpha, this.theta);
+                    List<SPFMiC> spfmics = FuzzyFunctions.separateExamplesByClusterClassifiedByFuzzyCMeans(examplesByClass.get(classes.get(j)), clusters, classes.get(j), this.alpha, this.theta, this.minWeight);
                     classifier.put(classes.get(j), spfmics);
                 }
                 this.ensembleOfClassifiers.add(classifier);
@@ -139,7 +141,7 @@ public class Ensemble {
                     this.knowLabels.add(classes.get(j));
                 }
                 FuzzyKMeansClusterer clusters = FuzzyFunctions.fuzzyCMeans(examplesByClass.get(classes.get(j)), this.K, this.fuzzification);
-                List<SPFMiC> spfmics = FuzzyFunctions.separateExamplesByClusterClassifiedByFuzzyCMeans(examplesByClass.get(classes.get(j)), clusters, classes.get(j), this.theta, this.alpha);
+                List<SPFMiC> spfmics = FuzzyFunctions.separateExamplesByClusterClassifiedByFuzzyCMeans(examplesByClass.get(classes.get(j)), clusters, classes.get(j), this.theta, this.alpha, this.minWeight);
                 classifier.put(classes.get(j), spfmics);
             } else {
                 newChunk.addAll(examplesByClass.get(classes.get(j)));
@@ -248,6 +250,8 @@ public class Ensemble {
         List<Double> tipicidades = new ArrayList<>();
         boolean isOutlier = true;
         for(int i=0; i<spfMiCS.size(); i++) {
+            System.out.println(example.getPonto().length);
+            System.out.println("tamanho: " + spfMiCS.size() + " - i: " + i);
             tipicidades.add(spfMiCS.get(i).calculaTipicidade(example.getPonto(), this.N, this.K));
             double distancia = DistanceMeasures.calculaDistanciaEuclidiana(example, spfMiCS.get(i).getCentroide());
             if(distancia <= spfMiCS.get(i).getRadius()) {
