@@ -5,9 +5,7 @@ import FuzzyProject.Fuzz.Models.SPFMiC;
 import org.apache.commons.math3.ml.clustering.CentroidCluster;
 import org.apache.commons.math3.ml.clustering.FuzzyKMeansClusterer;
 
-import java.util.ArrayList;
-import java.util.Collections;
-import java.util.List;
+import java.util.*;
 
 public class FuzzyFunctions {
     public static FuzzyKMeansClusterer fuzzyCMeans(List<Example> examples, int K, double fuzzification) {
@@ -50,7 +48,6 @@ public class FuzzyFunctions {
             }
             double fs = numerador / denominador;
             silhuetas.add(fs);
-            System.out.println(fs);
         }
         return silhuetas;
     }
@@ -153,6 +150,19 @@ public class FuzzyFunctions {
             }
         }
         return index;
+    }
+
+    public static Map<Double, List<Example>> separateByClasses(List<Example> chunk) {
+        Map<Double, List<Example>> examplesByClass = new HashMap<>();
+        for(int i=0; i<chunk.size(); i++) {
+            if(examplesByClass.containsKey(chunk.get(i).getRotuloVerdadeiro())) {
+                examplesByClass.get(chunk.get(i).getRotuloVerdadeiro()).add(chunk.get(i));
+            } else {
+                examplesByClass.put(chunk.get(i).getRotuloVerdadeiro(), new ArrayList<>());
+                examplesByClass.get(chunk.get(i).getRotuloVerdadeiro()).add(chunk.get(i));
+            }
+        }
+        return examplesByClass;
     }
 
 }

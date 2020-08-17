@@ -14,7 +14,7 @@ import java.util.List;
 
 public class FuzzySystem {
     public static void main(String[] args) throws IOException, Exception {
-        String dataset = "unsw";
+        String dataset = "moa";
         String caminho = "";
         String current = (new File(".")).getCanonicalPath();
         caminho = current + "/" + dataset + "/";
@@ -85,21 +85,27 @@ public class FuzzySystem {
 //        ensemble.N = 2;
 //        onlinePhase.initialize(current + "/keystroke/", "keystroke", ensemble, 365, 365);
 
+        OfflinePhase offlinePhase = new OfflinePhase();
+        Ensemble ensemble = offlinePhase.inicializar("moa", current + "/moa/", 6, data1, fuzzyfication, alpha, theta, 2000, 4, 5);
+        OnlinePhase onlinePhase = new OnlinePhase();
+        ensemble.N = 2;
+        onlinePhase.initialize(current + "/moa/", "moa", ensemble, 2000, 2000, 40, 4, 0.3);
+
 //        OfflinePhase offlinePhase = new OfflinePhase();
-//        Ensemble ensemble = offlinePhase.inicializar("moa", current + "/moa/", 6, data1, fuzzyfication, alpha, theta, 2000, 4);
+//        Ensemble ensemble = offlinePhase.inicializar("rbf", current + "/rbf/", 6, data1, fuzzyfication, alpha, theta, 2000, 4, 5);
 //        OnlinePhase onlinePhase = new OnlinePhase();
 //        ensemble.allTipMax = new MaxTipicity(0.95);
 //        ensemble.thetaAdapter = 0.31;
 //        ensemble.N = 2;
-//        onlinePhase.initialize(current + "/moa/", "moa", ensemble, 2000, 2000, 80, 4, 0.8);
+//        onlinePhase.initialize(current + "/rbf/", "rbf", ensemble, 2000, 2000, 80, 4, 0.5);
 
-        OfflinePhase offlinePhase = new OfflinePhase();
-        Ensemble ensemble = offlinePhase.inicializar(dataset, current + "/"+dataset+"/", 12, data1, fuzzyfication, alpha, theta, 152148, 32, 5);
-        OnlinePhase onlinePhase = new OnlinePhase();
-        ensemble.allTipMax = new MaxTipicity(0.70);
-        ensemble.thetaAdapter = 0.60;
-        ensemble.N = 2;
-        onlinePhase.initialize(current + "/"+dataset+"/", dataset, ensemble, 2000, 15000, 40, 4, 0.5);
+//        OfflinePhase offlinePhase = new OfflinePhase();
+//        Ensemble ensemble = offlinePhase.inicializar(dataset, current + "/"+dataset+"/", 12, data1, fuzzyfication, alpha, theta, 152148, 32, 5);
+//        OnlinePhase onlinePhase = new OnlinePhase();
+//        ensemble.allTipMax = new MaxTipicity(0.70);
+//        ensemble.thetaAdapter = 0.60;
+//        ensemble.N = 2;
+//        onlinePhase.initialize(current + "/"+dataset+"/", dataset, ensemble, 2000, 15000, 40, 4, 0.5);
     }
 }
 

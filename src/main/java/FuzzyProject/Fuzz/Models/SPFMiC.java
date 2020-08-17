@@ -186,9 +186,7 @@ public class SPFMiC {
      * Function used to calculate an attribute used in the typicality function
      */
     public double calculaTipicidade(double[] exemplo, double n, double K) {
-        System.out.println("antes tipicidadeI");
         double tipicidadeI = this.getTipicidadeI(K);
-        System.out.println("Depois tipicidadeI");
         double dist = DistanceMeasures.calculaDistanciaEuclidiana(exemplo, this.centroide);
         return (1 /
                 (1 + Math.pow(((this.theta/tipicidadeI) * dist),
