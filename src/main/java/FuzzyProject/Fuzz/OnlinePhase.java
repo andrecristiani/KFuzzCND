@@ -34,7 +34,7 @@ public class OnlinePhase {
     public int fpGlobal;
     public int fnGlobal;
 
-    public void initialize(String caminho, String dataset, Ensemble comite, int latencia, int tChunk, int T, int kShort, double phi) {
+    public void initialize(String caminho, String dataset, Ensemble comite, int latencia, int tChunk, int T, int kShort, double phi, int ts) {
 
         List<AcuraciaMedidas> acuracias = new ArrayList<>();
         this.ensemble = comite;
@@ -62,7 +62,7 @@ public class OnlinePhase {
                     System.out.println(i);
                 }
                 Instance ins = data.get(i);
-                Example exemplo = new Example(ins.toDoubleArray(), true);
+                Example exemplo = new Example(ins.toDoubleArray(), true, i);
                 double rotulo = comite.classify(ins);
                 exemplo.setRotuloClassificado(rotulo);
                 if(rotulo == exemplo.getRotuloVerdadeiro()) {
@@ -70,6 +70,11 @@ public class OnlinePhase {
                     acertosTotal++;
                 } else if (rotulo == -1) {
                     rotulo = nsModel.classify(exemplo, ensemble.N, ensemble.K);
+                    System.out.println(rotulo);
+                    if(rotulo == exemplo.getRotuloVerdadeiro()) {
+                        acertosTotal++;
+                        acertos++;
+                    }
                     if(rotulo == -1) {
                         desconhecido++;
                         unkMem.add(exemplo);
@@ -85,18 +90,20 @@ public class OnlinePhase {
 
                 this.exemplosEsperandoTempo.add(exemplo);
                 if(j >= latencia) {
-                    Example labeledExample = new Example(esperandoTempo.get(nExeTemp).toDoubleArray(), true);
+                    Example labeledExample = new Example(esperandoTempo.get(nExeTemp).toDoubleArray(), true, i);
                     labeledMem.add(labeledExample);
                     if(labeledMem.size() >= tChunk) {
                         if(nsModel.spfMiCS.size() > 0) {
                             System.err.println("Verificando se existe nova classe no modelo NS");
                             this.verifyIfExistNewClassInNSModel(labeledMem);
                         }
-                        System.err.println("Treinando nova árvore no ponto: " + i);
+                        System.err.println("Treinando um novo classificador no ponto: " + i);
                         labeledMem = comite.trainNewClassifier(labeledMem);
                     }
                     nExeTemp++;
                 }
+
+                this.removeOldUnknown(unkMem, ts, i);
 
                 if(h == 1000) {
                     h=0;
@@ -318,5 +325,15 @@ public class OnlinePhase {
     private double generateNPLabel() {
         nPCount++;
         return nPCount;
+    }
+
+    private List<Example> removeOldUnknown(List<Example> unkMem, int ts, int ct) {
+        List<Example> newUnkMem = new ArrayList<>();
+        for(int i=0; i<unkMem.size(); i++) {
+            if(ct - unkMem.get(i).getTime() <= ts) {
+                newUnkMem.add(unkMem.get(i));
+            }
+        }
+        return newUnkMem;
     }
 }

@@ -12,10 +12,28 @@ public class Example implements Instance, Clusterable {
     private double rotuloVerdadeiro;
     private double rotuloClassificado;
     private boolean desconhecido;
+    private int time;
 
     public Example(Instance instance) {
         this.ponto = instance.toDoubleArray();
         this.rotuloVerdadeiro = instance.classValue();
+        this.time = time;
+    }
+
+    public Example(double[] ponto, boolean comRotulo, int time) {
+        if(comRotulo) {
+            double[] novoPonto = new double[ponto.length-1];
+            for(int i=0; i<ponto.length-1; i++) {
+                novoPonto[i] = ponto[i];
+            }
+            this.rotuloVerdadeiro = ponto[ponto.length-1];
+            this.ponto = novoPonto;
+            this.time = time;
+        } else {
+            this.ponto = ponto;
+            this.rotuloVerdadeiro = -1;
+            this.time = time;
+        }
     }
 
     public Example(double[] ponto, boolean comRotulo) {
@@ -26,9 +44,11 @@ public class Example implements Instance, Clusterable {
             }
             this.rotuloVerdadeiro = ponto[ponto.length-1];
             this.ponto = novoPonto;
+            this.time = time;
         } else {
             this.ponto = ponto;
             this.rotuloVerdadeiro = -1;
+            this.time = time;
         }
     }
 
@@ -54,6 +74,14 @@ public class Example implements Instance, Clusterable {
 
     public void setPonto(double[] ponto) {
         this.ponto = ponto;
+    }
+
+    public int getTime() {
+        return time;
+    }
+
+    public void setTime(int time) {
+        this.time = time;
     }
 
     public boolean isDesconhecido() {
