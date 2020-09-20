@@ -34,6 +34,8 @@ public class OnlinePhase {
     public int fpGlobal;
     public int fnGlobal;
 
+    List<Example> results = new ArrayList<>();
+
     public void initialize(String caminho, String dataset, Ensemble comite, int latencia, int tChunk, int T, int kShort, double phi, int ts) {
 
         List<AcuraciaMedidas> acuracias = new ArrayList<>();
@@ -58,9 +60,6 @@ public class OnlinePhase {
 
             int desconhecido = 0;
             for(int i=0, j=0, h=0; i<data.size(); i++, j++, h++) {
-                if(i==60000) {
-                    System.out.println(i);
-                }
                 Instance ins = data.get(i);
                 Example exemplo = new Example(ins.toDoubleArray(), true, i);
                 double rotulo = comite.classify(ins);
@@ -70,7 +69,8 @@ public class OnlinePhase {
                     acertosTotal++;
                 } else if (rotulo == -1) {
                     rotulo = nsModel.classify(exemplo, ensemble.N, ensemble.K);
-                    System.out.println(rotulo);
+                    exemplo.setRotuloClassificado(rotulo);
+//                    System.out.println(rotulo);
                     if(rotulo == exemplo.getRotuloVerdadeiro()) {
                         acertosTotal++;
                         acertos++;
@@ -87,7 +87,7 @@ public class OnlinePhase {
                     erros++;
                     errosTotal++;
                 }
-
+                results.add(exemplo);
                 this.exemplosEsperandoTempo.add(exemplo);
                 if(j >= latencia) {
                     Example labeledExample = new Example(esperandoTempo.get(nExeTemp).toDoubleArray(), true, i);
@@ -95,7 +95,7 @@ public class OnlinePhase {
                     if(labeledMem.size() >= tChunk) {
                         if(nsModel.spfMiCS.size() > 0) {
                             System.err.println("Verificando se existe nova classe no modelo NS");
-                            this.verifyIfExistNewClassInNSModel(labeledMem);
+                            this.results = this.verifyIfExistNewClassInNSModel(labeledMem, this.results);
                         }
                         System.err.println("Treinando um novo classificador no ponto: " + i);
                         labeledMem = comite.trainNewClassifier(labeledMem);
@@ -115,11 +115,13 @@ public class OnlinePhase {
             }
             acuracias.add(Evaluation.calculaAcuracia(acertos, 730, data.size()));
             HandlesFiles.salvaPredicoes(acuracias, dataset);
+
             System.out.println("Acertos: " + acertosTotal);
             System.out.println("Erros: " + errosTotal);
             System.out.println("Desconhecidos: " + desconhecido);
             System.out.println("Sem classificar: " + unkMem.size());
             System.out.println(nsModel.spfMiCS.size());
+            HandlesFiles.salvaResultados(results, dataset);
 
         } catch (Exception ex) {
             System.out.println(ex);
@@ -127,7 +129,7 @@ public class OnlinePhase {
         }
     }
 
-    private void verifyIfExistNewClassInNSModel(List<Example> labeledMem) {
+    private List<Example> verifyIfExistNewClassInNSModel(List<Example> labeledMem, List<Example> results) {
         List<SPFMiC> spfMiCSInNSModel = nsModel.spfMiCS;
         List<Double> frs = new ArrayList<>();
         Map<Double, List<Example>> examplesByClass = FuzzyFunctions.separateByClasses(labeledMem);
@@ -166,12 +168,18 @@ public class OnlinePhase {
                     int indexMinFr = frs.indexOf(minFr);
                     if (minFr <= this.phi) {
                         System.err.println("Deu um spfmic");
+//                        System.out.println("SPFMiC rotulo: " + nsModel.spfMiCS.get(indexMinFr).getRotulo());
+                        for(int h=0; h<results.size(); h++) {
+                            if(results.get(h).getRotuloClassificado() == nsModel.spfMiCS.get(indexMinFr).getRotulo()) {
+                                results.get(h).setRotuloClassificado(spfmics.get(i).getRotulo());
+                            }
+                        }
                         nsModel.spfMiCS.remove(indexMinFr);
                     }
                 }
             }
         }
-
+        return results;
     }
 
     private List<Example> binaryNoveltyDetection(List<Example> listaDesconhecidos, int kCurto, double phi, int T) {
