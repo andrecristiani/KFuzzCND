@@ -314,7 +314,7 @@ public class Example implements Instance, Clusterable {
 
     @Override
     public double[] toDoubleArray() {
-        return new double[0];
+        return this.ponto;
     }
 
     @Override

@@ -14,7 +14,10 @@ public class Results {
         String caminho = "";
         String current = (new File(".")).getCanonicalPath();
         caminho = current + "/" + dataset + "/";
-        List<ResultsForExample> results = HandlesFiles.loadResults(caminho, 90000);
+//        List<ResultsForExample> results = HandlesFiles.loadResults(caminho, dataset, 46586);
+//        List<ResultsForExample> results = HandlesFiles.loadResults(caminho, dataset, 48848);
+//        List<ResultsForExample> results = HandlesFiles.loadResults(caminho, dataset, 531012);
+        List<ResultsForExample> results = HandlesFiles.loadResults(caminho, dataset, 90000);
         int unknown = 0;
         int acertos = 0;
         int errors = 0;
@@ -35,9 +38,9 @@ public class Results {
             }
         }
 
-        System.out.println(acertos);
-        System.out.println(errors);
-        System.out.println(unknown);
-        System.out.println(novelty);
+        System.out.println("Acertos: " + acertos);
+        System.out.println("Erros: " + errors);
+        System.out.println("Desconhecidos: " + unknown);
+        System.out.println("Novidades: " + novelty);
     }
 }

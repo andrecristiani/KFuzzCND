@@ -50,12 +50,14 @@ public class Ensemble {
                 Map<Double, List<SPFMiC>> classifier = new HashMap<>();
                 classes.addAll(examplesByClass.keySet());
                 for(int j=0; j<examplesByClass.size(); j++) {
-                    if(!this.knowLabels.contains(classes.get(j))) {
-                        this.knowLabels.add(classes.get(j));
+                    if(examplesByClass.get(classes.get(j)).size() > this.K) {
+                        if (!this.knowLabels.contains(classes.get(j))) {
+                            this.knowLabels.add(classes.get(j));
+                        }
+                        FuzzyKMeansClusterer clusters = FuzzyFunctions.fuzzyCMeans(examplesByClass.get(classes.get(j)), this.K, this.fuzzification);
+                        List<SPFMiC> spfmics = FuzzyFunctions.separateExamplesByClusterClassifiedByFuzzyCMeans(examplesByClass.get(classes.get(j)), clusters, classes.get(j), this.alpha, this.theta, this.minWeight);
+                        classifier.put(classes.get(j), spfmics);
                     }
-                    FuzzyKMeansClusterer clusters = FuzzyFunctions.fuzzyCMeans(examplesByClass.get(classes.get(j)), this.K, this.fuzzification);
-                    List<SPFMiC> spfmics = FuzzyFunctions.separateExamplesByClusterClassifiedByFuzzyCMeans(examplesByClass.get(classes.get(j)), clusters, classes.get(j), this.alpha, this.theta, this.minWeight);
-                    classifier.put(classes.get(j), spfmics);
                 }
                 this.ensembleOfClassifiers.add(classifier);
                 chunk.clear();
@@ -94,6 +96,18 @@ public class Ensemble {
         return indiceMaior;
     }
 
+    public double classifyNew(Instance ins) throws Exception {
+        List<SPFMiC> allSPFMiCSOfClassifier = new ArrayList<>();
+        for (int i = 0; i < ensembleOfClassifiers.size(); i++) {
+            Map<Double, List<SPFMiC>> classifier = this.ensembleOfClassifiers.get(i);
+            allSPFMiCSOfClassifier.addAll(this.getAllSPFMiCsFromClassifier(classifier));
+        }
+
+        double rotuloVotado = this.classify(allSPFMiCSOfClassifier, new Example(ins.toDoubleArray(), true));
+
+        return rotuloVotado;
+    }
+
     private void removeWorstClassifier(List<Example> exemplosRotulados) throws Exception {
         System.err.println("removendo classificador");
         double[] pontuacaoArvores = new double[this.ensembleOfClassifiers.size()];
@@ -129,7 +143,7 @@ public class Ensemble {
     public List<Example> trainNewClassifier(List<Example> chunk) throws Exception {
         List<Example> newChunk = new ArrayList<>();
         if(this.ensembleOfClassifiers.size() >= tamanhoMaximo) {
-            this.removeWorstClassifier(chunk);
+//            this.removeWorstClassifier(chunk);
         }
         Map<Double, List<Example>> examplesByClass = FuzzyFunctions.separateByClasses(chunk);
         List<Double> classes = new ArrayList<>();
@@ -174,14 +188,25 @@ public class Ensemble {
         List<Double> tipicidades = new ArrayList<>();
         List<Double> distancias = new ArrayList<>();
         boolean isOutlier = true;
+        double minDistance = Double.MAX_VALUE;
+        int indexMinDistance = -2;
         for(int i=0; i<spfMiCS.size(); i++) {
             tipicidades.add(spfMiCS.get(i).calculaTipicidade(example.getPonto(), this.N, this.K));
             double distancia = DistanceMeasures.calculaDistanciaEuclidiana(example, spfMiCS.get(i).getCentroide());
             distancias.add(distancia);
+            if(distancia < minDistance) {
+                minDistance = distancia;
+                indexMinDistance = i;
+            }
             if(distancia <= spfMiCS.get(i).getRadius()) {
                 isOutlier = false;
             }
         }
+
+        Double minVal = Collections.min(distancias);
+        int indexMin = tipicidades.indexOf(minVal);
+
+//        System.out.println("Distância: " + distancias.get(indexMinDistance) + ", Raio: " + spfMiCS.get(indexMinDistance).getRadius() + ", Rotulo SPFMic: " + spfMiCS.get(indexMinDistance).getRotulo() + ", Rotulo Exemplo: " + example.getRotuloVerdadeiro() + ", Outlier: " + isOutlier);
 
         if(isOutlier) {
             return -1;

@@ -4,6 +4,7 @@ import FuzzyProject.Fuzz.Models.Example;
 import FuzzyProject.Fuzz.Models.SPFMiC;
 import org.apache.commons.math3.ml.clustering.CentroidCluster;
 import org.apache.commons.math3.ml.clustering.FuzzyKMeansClusterer;
+import org.apache.commons.math3.ml.distance.EuclideanDistance;
 
 import java.util.*;
 
@@ -71,6 +72,7 @@ public class FuzzyFunctions {
         for(int j=0; j<centroides.size(); j++) {
             SPFMiC sfMiC = null;
             double SSD = 0;
+            double teste = 0;
             for(int k=0; k<exemplos.size(); k++) {
                 int indiceMaior = getIndiceDoMaiorValor(matriz[k]);
                 if(indiceMaior == j) {
@@ -83,13 +85,19 @@ public class FuzzyFunctions {
                         double valorPertinencia = matriz[k][j];
                         double[] ex = exemplos.get(k).getPonto();
                         double distancia = DistanceMeasures.calculaDistanciaEuclidiana(sfMiC.getCentroide(), ex);
-                        SSD += distancia * Math.pow(valorPertinencia, 2);
+                        EuclideanDistance dist = new EuclideanDistance();
+                        double distN = dist.compute(sfMiC.getCentroide(), ex);
+                        teste += Math.pow(valorPertinencia, 2);
+                        SSD += valorPertinencia * Math.pow(distancia, 2);
 
                     } else {
                         double valorPertinencia = matriz[k][j];
                         double[] ex = exemplos.get(k).getPonto();
                         double distancia = DistanceMeasures.calculaDistanciaEuclidiana(sfMiC.getCentroide(), ex);
-                        SSD += distancia * Math.pow(valorPertinencia, 2);
+//                        SSD += distancia * Math.pow(valorPertinencia, 2);
+                        teste += Math.pow(valorPertinencia, 2);
+                        SSD += valorPertinencia * Math.pow(distancia, 2);
+//                        System.out.println("Valor: " + SSD);
                     }
                 }
             }
@@ -110,6 +118,7 @@ public class FuzzyFunctions {
         for(int j=0; j<centroides.size(); j++) {
             SPFMiC sfMiC = null;
             double SSD = 0;
+            double teste = 0;
             List<Example> examples = centroides.get(j).getPoints();
             for(int k=0; k<examples.size(); k++) {
                 int indexExample = exemplos.indexOf(examples.get(k));
@@ -122,12 +131,16 @@ public class FuzzyFunctions {
                     double valorPertinencia = matriz[indexExample][j];
                     double[] ex = exemplos.get(k).getPonto();
                     double distancia = DistanceMeasures.calculaDistanciaEuclidiana(sfMiC.getCentroide(), ex);
-                    SSD += distancia * Math.pow(valorPertinencia, 2);
+//                    SSD += distancia * Math.pow(valorPertinencia, 2);
+                    teste += distancia * Math.pow(valorPertinencia, 2);
+                    SSD += valorPertinencia * Math.pow(distancia, 2);
                 } else {
                     double valorPertinencia = matriz[k][j];
                     double[] ex = exemplos.get(k).getPonto();
                     double distancia = DistanceMeasures.calculaDistanciaEuclidiana(sfMiC.getCentroide(), ex);
-                    SSD += distancia * Math.pow(valorPertinencia, 2);
+//                    SSD += distancia * Math.pow(valorPertinencia, 2);
+                    teste += distancia * Math.pow(valorPertinencia, 2);
+                    SSD += valorPertinencia * Math.pow(distancia, 2);
                 }
             }
             if(sfMiC != null) {

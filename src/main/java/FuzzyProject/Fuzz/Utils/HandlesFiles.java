@@ -43,10 +43,10 @@ public class HandlesFiles {
         buf_writer.close();
     }
 
-    public static ArrayList<ResultsForExample> loadResults(String caminho, int numAnalises) {
+    public static ArrayList<ResultsForExample> loadResults(String caminho, String dataset, int numAnalises) {
         BufferedReader inReader = null;
         try {
-            inReader = new BufferedReader(new FileReader(caminho+"moa-FuzzCND-results.txt"));
+            inReader = new BufferedReader(new FileReader(caminho + dataset +"-FuzzCND-results.txt"));
         } catch (FileNotFoundException var11) {
             System.err.println("carregaParticao - Não foi possível abrir o arquivo: " + caminho);
             System.exit(1);

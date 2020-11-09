@@ -1,8 +1,13 @@
 package FuzzyProject.Fuzz.Models;
 
 import FuzzyProject.Fuzz.Utils.DistanceMeasures;
+import weka.core.Attribute;
+import weka.core.Instance;
+import weka.core.Instances;
 
-public class SPFMiC {
+import java.util.Enumeration;
+
+public class SPFMiC implements Instance {
     private double Mm; //soma linear das pertinências elevadas a m
     private double Tn; //soma linear das tipicidades elevadas a n
     private double CF1pertinencias[]; //soma linear dos ex ponderados por suas pertinencias
@@ -11,6 +16,7 @@ public class SPFMiC {
     private double N;
     private double t;
     private double rotulo;
+    private double rotuloReal;
     private double centroide[];
     private double alpha;
     private double theta;
@@ -151,6 +157,30 @@ public class SPFMiC {
         this.Mm += Math.pow(pertinencia, 2);
     }
 
+    public double getRotuloReal() {
+        return rotuloReal;
+    }
+
+    public void setRotuloReal(double rotuloReal) {
+        this.rotuloReal = rotuloReal;
+    }
+
+    public double getMinFr() {
+        return minFr;
+    }
+
+    public void setMinFr(double minFr) {
+        this.minFr = minFr;
+    }
+
+    public double getRotuloMenorDistancia() {
+        return rotuloMenorDistancia;
+    }
+
+    public void setRotuloMenorDistancia(double rotuloMenorDistancia) {
+        this.rotuloMenorDistancia = rotuloMenorDistancia;
+    }
+
     /***
      * Updates the center position.
      */
@@ -204,5 +234,265 @@ public class SPFMiC {
 
     public double getRadius() {
         return Math.sqrt((this.SSDe/this.N));
+    }
+
+    @Override
+    public Attribute attribute(int i) {
+        return null;
+    }
+
+    @Override
+    public Attribute attributeSparse(int i) {
+        return null;
+    }
+
+    @Override
+    public Attribute classAttribute() {
+        return null;
+    }
+
+    @Override
+    public int classIndex() {
+        return 0;
+    }
+
+    @Override
+    public boolean classIsMissing() {
+        return false;
+    }
+
+    @Override
+    public double classValue() {
+        return 0;
+    }
+
+    @Override
+    public Instance copy(double[] doubles) {
+        return null;
+    }
+
+    @Override
+    public Instances dataset() {
+        return null;
+    }
+
+    @Override
+    public void deleteAttributeAt(int i) {
+
+    }
+
+    @Override
+    public Enumeration<Attribute> enumerateAttributes() {
+        return null;
+    }
+
+    @Override
+    public boolean equalHeaders(Instance instance) {
+        return false;
+    }
+
+    @Override
+    public String equalHeadersMsg(Instance instance) {
+        return null;
+    }
+
+    @Override
+    public boolean hasMissingValue() {
+        return false;
+    }
+
+    @Override
+    public int index(int i) {
+        return 0;
+    }
+
+    @Override
+    public void insertAttributeAt(int i) {
+
+    }
+
+    @Override
+    public boolean isMissing(int i) {
+        return false;
+    }
+
+    @Override
+    public boolean isMissingSparse(int i) {
+        return false;
+    }
+
+    @Override
+    public boolean isMissing(Attribute attribute) {
+        return false;
+    }
+
+    @Override
+    public Instance mergeInstance(Instance instance) {
+        return null;
+    }
+
+    @Override
+    public int numAttributes() {
+        return 0;
+    }
+
+    @Override
+    public int numClasses() {
+        return 0;
+    }
+
+    @Override
+    public int numValues() {
+        return 0;
+    }
+
+    @Override
+    public void replaceMissingValues(double[] doubles) {
+
+    }
+
+    @Override
+    public void setClassMissing() {
+
+    }
+
+    @Override
+    public void setClassValue(double v) {
+
+    }
+
+    @Override
+    public void setClassValue(String s) {
+
+    }
+
+    @Override
+    public void setDataset(Instances instances) {
+
+    }
+
+    @Override
+    public void setMissing(int i) {
+
+    }
+
+    @Override
+    public void setMissing(Attribute attribute) {
+
+    }
+
+    @Override
+    public void setValue(int i, double v) {
+
+    }
+
+    @Override
+    public void setValueSparse(int i, double v) {
+
+    }
+
+    @Override
+    public void setValue(int i, String s) {
+
+    }
+
+    @Override
+    public void setValue(Attribute attribute, double v) {
+
+    }
+
+    @Override
+    public void setValue(Attribute attribute, String s) {
+
+    }
+
+    @Override
+    public void setWeight(double v) {
+
+    }
+
+    @Override
+    public Instances relationalValue(int i) {
+        return null;
+    }
+
+    @Override
+    public Instances relationalValue(Attribute attribute) {
+        return null;
+    }
+
+    @Override
+    public String stringValue(int i) {
+        return null;
+    }
+
+    @Override
+    public String stringValue(Attribute attribute) {
+        return null;
+    }
+
+    @Override
+    public double[] toDoubleArray() {
+        return this.centroide;
+    }
+
+    @Override
+    public String toStringNoWeight(int i) {
+        return null;
+    }
+
+    @Override
+    public String toStringNoWeight() {
+        return null;
+    }
+
+    @Override
+    public String toStringMaxDecimalDigits(int i) {
+        return null;
+    }
+
+    @Override
+    public String toString(int i, int i1) {
+        return null;
+    }
+
+    @Override
+    public String toString(int i) {
+        return null;
+    }
+
+    @Override
+    public String toString(Attribute attribute, int i) {
+        return null;
+    }
+
+    @Override
+    public String toString(Attribute attribute) {
+        return null;
+    }
+
+    @Override
+    public double value(int i) {
+        return 0;
+    }
+
+    @Override
+    public double valueSparse(int i) {
+        return 0;
+    }
+
+    @Override
+    public double value(Attribute attribute) {
+        return 0;
+    }
+
+    @Override
+    public double weight() {
+        return 0;
+    }
+
+    @Override
+    public Object copy() {
+        return null;
     }
 }
