@@ -55,7 +55,7 @@ public class Ensemble {
                             this.knowLabels.add(classes.get(j));
                         }
                         FuzzyKMeansClusterer clusters = FuzzyFunctions.fuzzyCMeans(examplesByClass.get(classes.get(j)), this.K, this.fuzzification);
-                        List<SPFMiC> spfmics = FuzzyFunctions.separateExamplesByClusterClassifiedByFuzzyCMeans(examplesByClass.get(classes.get(j)), clusters, classes.get(j), this.alpha, this.theta, this.minWeight);
+                        List<SPFMiC> spfmics = FuzzyFunctions.separateExamplesByClusterClassifiedByFuzzyCMeans(examplesByClass.get(classes.get(j)), clusters, classes.get(j), this.alpha, this.theta, this.minWeight, 0);
                         classifier.put(classes.get(j), spfmics);
                     }
                 }
@@ -65,45 +65,45 @@ public class Ensemble {
         }
     }
 
-    public double classify(Instance ins) throws Exception {
+//    public double classify(Instance ins) throws Exception {
+//
+//        Map<Double, Integer> numeroVotos = new HashMap<>();
+//
+//        List<String> votos = new ArrayList<>();
+//        for (int i = 0; i < ensembleOfClassifiers.size(); i++) {
+//            Map<Double, List<SPFMiC>> classifier = this.ensembleOfClassifiers.get(i);
+//            List<SPFMiC> allSPFMiCSOfClassifier = this.getAllSPFMiCsFromClassifier(classifier);
+//            double rotuloVotado = this.classify(allSPFMiCSOfClassifier, new Example(ins.toDoubleArray(), true));
+//            if(numeroVotos.containsKey(rotuloVotado)) {
+//                numeroVotos.replace(rotuloVotado, numeroVotos.get(rotuloVotado) + 1);
+//            } else {
+//                numeroVotos.put(rotuloVotado, 1);
+//            }
+//        }
+//
+//        int valorMaior = -1;
+//        double indiceMaior = 0;
+//
+//        Set<Double> chavesAux = numeroVotos.keySet();
+//        Object[] chaves = chavesAux.toArray();
+//        for(int i=0; i<numeroVotos.size(); i++) {
+//            if(valorMaior < numeroVotos.get(chaves[i])) {
+//                valorMaior = numeroVotos.get(chaves[i]);
+//                indiceMaior = (double) chaves[i];
+//            }
+//        }
+//
+//        return indiceMaior;
+//    }
 
-        Map<Double, Integer> numeroVotos = new HashMap<>();
-
-        List<String> votos = new ArrayList<>();
-        for (int i = 0; i < ensembleOfClassifiers.size(); i++) {
-            Map<Double, List<SPFMiC>> classifier = this.ensembleOfClassifiers.get(i);
-            List<SPFMiC> allSPFMiCSOfClassifier = this.getAllSPFMiCsFromClassifier(classifier);
-            double rotuloVotado = this.classify(allSPFMiCSOfClassifier, new Example(ins.toDoubleArray(), true));
-            if(numeroVotos.containsKey(rotuloVotado)) {
-                numeroVotos.replace(rotuloVotado, numeroVotos.get(rotuloVotado) + 1);
-            } else {
-                numeroVotos.put(rotuloVotado, 1);
-            }
-        }
-
-        int valorMaior = -1;
-        double indiceMaior = 0;
-
-        Set<Double> chavesAux = numeroVotos.keySet();
-        Object[] chaves = chavesAux.toArray();
-        for(int i=0; i<numeroVotos.size(); i++) {
-            if(valorMaior < numeroVotos.get(chaves[i])) {
-                valorMaior = numeroVotos.get(chaves[i]);
-                indiceMaior = (double) chaves[i];
-            }
-        }
-
-        return indiceMaior;
-    }
-
-    public double classifyNew(Instance ins) throws Exception {
+    public double classifyNew(Instance ins, int updateTime) throws Exception {
         List<SPFMiC> allSPFMiCSOfClassifier = new ArrayList<>();
         for (int i = 0; i < ensembleOfClassifiers.size(); i++) {
             Map<Double, List<SPFMiC>> classifier = this.ensembleOfClassifiers.get(i);
             allSPFMiCSOfClassifier.addAll(this.getAllSPFMiCsFromClassifier(classifier));
         }
 
-        double rotuloVotado = this.classify(allSPFMiCSOfClassifier, new Example(ins.toDoubleArray(), true));
+        double rotuloVotado = this.classify(allSPFMiCSOfClassifier, new Example(ins.toDoubleArray(), true), updateTime);
 
         return rotuloVotado;
     }
@@ -119,7 +119,7 @@ public class Ensemble {
             for(int k=0; k<this.ensembleOfClassifiers.size(); k++) {
                 Map<Double, List<SPFMiC>> classifier = this.ensembleOfClassifiers.get(k);
                 List<SPFMiC> allSPFMiCSOfClassifier = this.getAllSPFMiCsFromClassifier(classifier);
-                double rotuloVotado = this.classify(allSPFMiCSOfClassifier, exemplosRotulados.get(i));
+                double rotuloVotado = this.classifyWithoutTime(allSPFMiCSOfClassifier, exemplosRotulados.get(i));
                 if(rotuloVotado == exemplosRotulados.get(i).getRotuloVerdadeiro()) {
                     pontuacaoArvores[k]++;
                 }
@@ -140,10 +140,10 @@ public class Ensemble {
         this.ensembleOfClassifiers.remove(index);
     }
 
-    public List<Example> trainNewClassifier(List<Example> chunk) throws Exception {
+    public List<Example> trainNewClassifier(List<Example> chunk, int t) throws Exception {
         List<Example> newChunk = new ArrayList<>();
         if(this.ensembleOfClassifiers.size() >= tamanhoMaximo) {
-//            this.removeWorstClassifier(chunk);
+            this.removeWorstClassifier(chunk);
         }
         Map<Double, List<Example>> examplesByClass = FuzzyFunctions.separateByClasses(chunk);
         List<Double> classes = new ArrayList<>();
@@ -155,7 +155,7 @@ public class Ensemble {
                     this.knowLabels.add(classes.get(j));
                 }
                 FuzzyKMeansClusterer clusters = FuzzyFunctions.fuzzyCMeans(examplesByClass.get(classes.get(j)), this.K, this.fuzzification);
-                List<SPFMiC> spfmics = FuzzyFunctions.separateExamplesByClusterClassifiedByFuzzyCMeans(examplesByClass.get(classes.get(j)), clusters, classes.get(j), this.theta, this.alpha, this.minWeight);
+                List<SPFMiC> spfmics = FuzzyFunctions.separateExamplesByClusterClassifiedByFuzzyCMeans(examplesByClass.get(classes.get(j)), clusters, classes.get(j), this.theta, this.alpha, this.minWeight, t);
                 classifier.put(classes.get(j), spfmics);
             } else {
                 newChunk.addAll(examplesByClass.get(classes.get(j)));
@@ -184,7 +184,7 @@ public class Ensemble {
         return spfMiCS;
     }
 
-    public double classify(List<SPFMiC> spfMiCS, Example example) {
+    public double classify(List<SPFMiC> spfMiCS, Example example, int updateTime) {
         List<Double> tipicidades = new ArrayList<>();
         List<Double> distancias = new ArrayList<>();
         boolean isOutlier = true;
@@ -214,7 +214,29 @@ public class Ensemble {
 
         Double maxVal = Collections.max(tipicidades);
         int indexMax = tipicidades.indexOf(maxVal);
+        spfMiCS.get(indexMax).setUpdated(updateTime);
+        return spfMiCS.get(indexMax).getRotulo();
+    }
 
+    public double classifyWithoutTime(List<SPFMiC> spfMiCS, Example example) {
+        List<Double> tipicidades = new ArrayList<>();
+        List<Double> distancias = new ArrayList<>();
+        boolean isOutlier = true;
+        for(int i=0; i<spfMiCS.size(); i++) {
+            tipicidades.add(spfMiCS.get(i).calculaTipicidade(example.getPonto(), this.N, this.K));
+            double distancia = DistanceMeasures.calculaDistanciaEuclidiana(example, spfMiCS.get(i).getCentroide());
+            distancias.add(distancia);
+            if(distancia <= spfMiCS.get(i).getRadius()) {
+                isOutlier = false;
+            }
+        }
+
+        if(isOutlier) {
+            return -1;
+        }
+
+        Double maxVal = Collections.max(tipicidades);
+        int indexMax = tipicidades.indexOf(maxVal);
         return spfMiCS.get(indexMax).getRotulo();
     }
 }

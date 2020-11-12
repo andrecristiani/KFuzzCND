@@ -65,7 +65,7 @@ public class FuzzyFunctions {
         return resultado;
     }
 
-    public static List<SPFMiC> separateExamplesByClusterClassifiedByFuzzyCMeans(List<Example> exemplos, FuzzyKMeansClusterer fuzzyClusterer, double rotulo, double alpha, double theta, int minWeight) {
+    public static List<SPFMiC> separateExamplesByClusterClassifiedByFuzzyCMeans(List<Example> exemplos, FuzzyKMeansClusterer fuzzyClusterer, double rotulo, double alpha, double theta, int minWeight, int t) {
         List<SPFMiC> sfMiCS = new ArrayList<SPFMiC>();
         double[][] matriz = fuzzyClusterer.getMembershipMatrix().getData();
         List<CentroidCluster> centroides = fuzzyClusterer.getClusters();
@@ -80,7 +80,7 @@ public class FuzzyFunctions {
                         sfMiC = new SPFMiC(centroides.get(j).getCenter().getPoint(),
                                 centroides.get(j).getPoints().size(),
                                 alpha,
-                                theta);
+                                theta, t);
                         sfMiC.setRotulo(rotulo);
                         double valorPertinencia = matriz[k][j];
                         double[] ex = exemplos.get(k).getPonto();
@@ -111,7 +111,7 @@ public class FuzzyFunctions {
         return sfMiCS;
     }
 
-    public static List<SPFMiC> newSeparateExamplesByClusterClassifiedByFuzzyCMeans(List<Example> exemplos, FuzzyKMeansClusterer fuzzyClusterer, double rotulo, double alpha, double theta, int minWeight) {
+    public static List<SPFMiC> newSeparateExamplesByClusterClassifiedByFuzzyCMeans(List<Example> exemplos, FuzzyKMeansClusterer fuzzyClusterer, double rotulo, double alpha, double theta, int minWeight, int t) {
         List<SPFMiC> sfMiCS = new ArrayList<SPFMiC>();
         double[][] matriz = fuzzyClusterer.getMembershipMatrix().getData();
         List<CentroidCluster> centroides = fuzzyClusterer.getClusters();
@@ -126,7 +126,7 @@ public class FuzzyFunctions {
                     sfMiC = new SPFMiC(centroides.get(j).getCenter().getPoint(),
                             centroides.get(j).getPoints().size(),
                             alpha,
-                            theta);
+                            theta, t);
                     sfMiC.setRotulo(rotulo);
                     double valorPertinencia = matriz[indexExample][j];
                     double[] ex = exemplos.get(k).getPonto();

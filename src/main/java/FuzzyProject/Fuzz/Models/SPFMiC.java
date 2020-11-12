@@ -15,6 +15,7 @@ public class SPFMiC implements Instance {
     private double SSDe; //soma das distâncias dos exemplos para o protótipo do micro-grupo, elevadas a m
     private double N;
     private double t;
+    private double updated;
     private double rotulo;
     private double rotuloReal;
     private double centroide[];
@@ -24,7 +25,7 @@ public class SPFMiC implements Instance {
     public double minFr;
     public double rotuloMenorDistancia;
 
-    public SPFMiC(double[] centroide, int N, double alpha, double theta) {
+    public SPFMiC(double[] centroide, int N, double alpha, double theta, int t) {
         this.CF1pertinencias = centroide;
         this.CF1tipicidades = centroide;
         this.centroide = centroide;
@@ -34,7 +35,7 @@ public class SPFMiC implements Instance {
         this.Mm = 1;
         this.Tn = 1;
         this.SSDe = 0;
-        this.t = 0;
+        this.t = t;
     }
 
     public SPFMiC() {
@@ -179,6 +180,14 @@ public class SPFMiC implements Instance {
 
     public void setRotuloMenorDistancia(double rotuloMenorDistancia) {
         this.rotuloMenorDistancia = rotuloMenorDistancia;
+    }
+
+    public double getUpdated() {
+        return updated;
+    }
+
+    public void setUpdated(double updated) {
+        this.updated = updated;
     }
 
     /***

@@ -10,14 +10,14 @@ import java.util.List;
 
 public class Results {
     public static void main(String[] args) throws IOException {
-        String dataset = "moa";
+        String dataset = "rbf";
         String caminho = "";
         String current = (new File(".")).getCanonicalPath();
         caminho = current + "/" + dataset + "/";
-//        List<ResultsForExample> results = HandlesFiles.loadResults(caminho, dataset, 46586);
+        List<ResultsForExample> results = HandlesFiles.loadResults(caminho, dataset, 46586);
 //        List<ResultsForExample> results = HandlesFiles.loadResults(caminho, dataset, 48848);
 //        List<ResultsForExample> results = HandlesFiles.loadResults(caminho, dataset, 531012);
-        List<ResultsForExample> results = HandlesFiles.loadResults(caminho, dataset, 90000);
+//        List<ResultsForExample> results = HandlesFiles.loadResults(caminho, dataset, 90000);
         int unknown = 0;
         int acertos = 0;
         int errors = 0;

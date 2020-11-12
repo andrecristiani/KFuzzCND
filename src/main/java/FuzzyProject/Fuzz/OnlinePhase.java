@@ -14,6 +14,8 @@ import weka.core.Instances;
 import weka.core.converters.ConverterUtils.DataSource;
 
 import java.util.*;
+import java.util.stream.IntStream;
+import java.util.stream.Stream;
 
 public class OnlinePhase {
 
@@ -22,6 +24,7 @@ public class OnlinePhase {
     double nPCount = 100;
     double phi = 0;
     int erroSeparado = 0;
+    int erroNs = 0;
     Ensemble ensemble;
     NotSupervisedModel nsModel;
 
@@ -54,18 +57,23 @@ public class OnlinePhase {
             for(int i=0, j=0, h=0; i<data.size(); i++, j++, h++) {
                 Instance ins = data.get(i);
                 Example exemplo = new Example(ins.toDoubleArray(), true, i);
-                double rotulo = comite.classifyNew(ins);
+                double rotulo = comite.classifyNew(ins, i);
                 exemplo.setRotuloClassificado(rotulo);
                 if(rotulo == exemplo.getRotuloVerdadeiro()) {
                     acertos++;
                 } else if (rotulo == -1) {
-                    rotulo = nsModel.classify(exemplo, ensemble.N, ensemble.K);
+                    rotulo = nsModel.classify(exemplo, ensemble.N, ensemble.K, i);
                     exemplo.setRotuloClassificado(rotulo);
                     if(rotulo == -1) {
                         desconhecido++;
                         unkMem.add(exemplo);
                         if (unkMem.size() >= T) {
-                            unkMem = this.multiClassNoveltyDetection(unkMem, kShort, phi, T, minWeight);
+                            unkMem = this.multiClassNoveltyDetection(unkMem, kShort, phi, minWeight, i);
+                        }
+                    } else {
+                        if(rotulo < 100 && rotulo != exemplo.getRotuloVerdadeiro()) {
+                            erroNs++;
+                            rotulo = nsModel.classify(exemplo, ensemble.N, ensemble.K, i);
                         }
                     }
                 } else {
@@ -78,11 +86,12 @@ public class OnlinePhase {
                     labeledMem.add(labeledExample);
                     if(labeledMem.size() >= tChunk) {
                         if(nsModel.spfMiCS.size() > 0) {
-                            this.results = this.verifyIfExistNewClassInNSModel(labeledMem, this.results);
+                            this.results = this.verifyIfExistNewClassInNSModel(labeledMem, this.results, i);
                         }
-                        labeledMem = comite.trainNewClassifier(labeledMem);
+                        labeledMem = comite.trainNewClassifier(labeledMem, i);
                     }
                     nExeTemp++;
+//                    nsModel.removeOldSPFMiCs(latencia, i);
                 }
 
                 this.removeOldUnknown(unkMem, ts, i);
@@ -92,6 +101,7 @@ public class OnlinePhase {
                     System.out.println("Ponto: " + i);
                     System.out.println("Acertos: " + acertos);
                     System.out.println("Erros separado: " + erroSeparado);
+                    System.out.println("ErrosNS: " + erroNs);
                     System.out.println("Desconhecidos:" + desconhecido);
                     h=0;
                 }
@@ -109,8 +119,7 @@ public class OnlinePhase {
         }
     }
 
-    private List<Example> verifyIfExistNewClassInNSModel(List<Example> labeledMem, List<Example> results) {
-        List<SPFMiC> spfMiCSInNSModel = nsModel.spfMiCS;
+    private List<Example> verifyIfExistNewClassInNSModel(List<Example> labeledMem, List<Example> results, int t) {
         List<Double> frs = new ArrayList<>();
         Map<Double, List<Example>> examplesByClass = FuzzyFunctions.separateByClasses(labeledMem);
         List<Double> classes = new ArrayList<>();
@@ -120,27 +129,73 @@ public class OnlinePhase {
         for(int j=0; j<examplesByClass.size(); j++) {
             if(examplesByClass.get(classes.get(j)).size() > this.ensemble.K) {
                 FuzzyKMeansClusterer clusters = FuzzyFunctions.fuzzyCMeans(examplesByClass.get(classes.get(j)), this.ensemble.K, this.ensemble.fuzzification);
-                spfmics = FuzzyFunctions.separateExamplesByClusterClassifiedByFuzzyCMeans(examplesByClass.get(classes.get(j)), clusters, classes.get(j), this.ensemble.alpha, this.ensemble.theta, this.ensemble.minWeight);
+                spfmics = FuzzyFunctions.separateExamplesByClusterClassifiedByFuzzyCMeans(examplesByClass.get(classes.get(j)), clusters, classes.get(j), this.ensemble.alpha, this.ensemble.theta, this.ensemble.minWeight, t);
                 classifier.put(classes.get(j), spfmics);
             }
         }
+
+//        for(int i=0; i<spfmics.size(); i++) {
+//            if(nsModel.spfMiCS.size() > 0) {
+//                if (!spfmics.get(i).isNull()) {
+//                    frs.clear();
+//                    double dist2 = Double.MAX_VALUE;
+//                    SPFMiC spfMiCMenorDistancia = new SPFMiC();
+//                    for (int j = 0; j < spfMiCSInNSModel.size(); j++) {
+//                        double dist3 = DistanceMeasures.calculaDistanciaEuclidiana(spfmics.get(i).getCentroide(), spfMiCSInNSModel.get(j).getCentroide());
+//                        if (dist3 < dist2) {
+//                            dist2 = dist3;
+//                            spfMiCMenorDistancia = spfMiCSInNSModel.get(j);
+//                        }
+//
+//                        double di = spfMiCSInNSModel.get(j).getRadius();
+//                        double dj = spfmics.get(i).getRadius();
+//                        double dist = (di + dj) / DistanceMeasures.calculaDistanciaEuclidiana(spfMiCSInNSModel.get(j).getCentroide(), spfmics.get(i).getCentroide());
+//                        frs.add((di + dj) / dist);
+//                    }
+//
+//                    Double minFr = Collections.min(frs);
+//                    int indexMinFr = frs.indexOf(minFr);
+//                    if (minFr <= this.phi) {
+//                        System.err.println("Deu um spfmic");
+//                        if(spfmics.get(i).getRotulo() != nsModel.spfMiCS.get(indexMinFr).getRotuloReal()) {
+//                            System.err.println("Rotulos não batem");
+//                        }
+//                        for(int h=0; h<results.size(); h++) {
+//                            if(results.get(h).getRotuloClassificado() > 100) {
+//                                if (results.get(h).getRotuloClassificado() == nsModel.spfMiCS.get(indexMinFr).getRotulo()) {
+//                                    results.get(h).setRotuloClassificado(spfmics.get(i).getRotulo());
+//                                }
+//                            }
+//                        }
+//
+//                        List<SPFMiC> aux = new ArrayList<>();
+//                        for(int j=0; j<nsModel.spfMiCS.size(); j++) {
+//                            if(!(nsModel.spfMiCS.get(indexMinFr).getRotulo() == nsModel.spfMiCS.get(j).getRotulo()
+//                            && frs.get(j) < this.phi)) {
+//                                aux.add(nsModel.spfMiCS.get(j));
+//                            }
+//                        }
+//
+//                        nsModel.spfMiCS = aux;
+//                    }
+//                }
+//            }
+//        }
 
         for(int i=0; i<spfmics.size(); i++) {
             if(nsModel.spfMiCS.size() > 0) {
                 if (!spfmics.get(i).isNull()) {
                     frs.clear();
                     double dist2 = Double.MAX_VALUE;
-                    SPFMiC spfMiCMenorDistancia = new SPFMiC();
-                    for (int j = 0; j < spfMiCSInNSModel.size(); j++) {
-                        double dist3 = DistanceMeasures.calculaDistanciaEuclidiana(spfmics.get(i).getCentroide(), spfMiCSInNSModel.get(j).getCentroide());
+                    for (int j = 0; j < nsModel.spfMiCS.size(); j++) {
+                        double dist3 = DistanceMeasures.calculaDistanciaEuclidiana(spfmics.get(i).getCentroide(), nsModel.spfMiCS.get(j).getCentroide());
                         if (dist3 < dist2) {
                             dist2 = dist3;
-                            spfMiCMenorDistancia = spfMiCSInNSModel.get(j);
                         }
 
-                        double di = spfMiCSInNSModel.get(j).getRadius();
+                        double di = nsModel.spfMiCS.get(j).getRadius();
                         double dj = spfmics.get(i).getRadius();
-                        double dist = (di + dj) / DistanceMeasures.calculaDistanciaEuclidiana(spfMiCSInNSModel.get(j).getCentroide(), spfmics.get(i).getCentroide());
+                        double dist = (di + dj) / DistanceMeasures.calculaDistanciaEuclidiana(nsModel.spfMiCS.get(j).getCentroide(), spfmics.get(i).getCentroide());
                         frs.add((di + dj) / dist);
                     }
 
@@ -158,7 +213,16 @@ public class OnlinePhase {
                                 }
                             }
                         }
-                        nsModel.spfMiCS.remove(indexMinFr);
+
+                        List<SPFMiC> aux = new ArrayList<>();
+                        for(int j=0; j<nsModel.spfMiCS.size(); j++) {
+                            if(!(nsModel.spfMiCS.get(indexMinFr).getRotulo() == nsModel.spfMiCS.get(j).getRotulo()
+                                    && frs.get(j) < this.phi)) {
+                                aux.add(nsModel.spfMiCS.get(j));
+                            }
+                        }
+
+                        nsModel.spfMiCS = aux;
                     }
                 }
             }
@@ -166,7 +230,7 @@ public class OnlinePhase {
         return results;
     }
 
-    private List<Example> multiClassNoveltyDetection(List<Example> listaDesconhecidos, int kCurto, double phi, int T, int minWeight) {
+    private List<Example> multiClassNoveltyDetection(List<Example> listaDesconhecidos, int kCurto, double phi, int minWeight, int t) {
         FuzzyKMeansClusterer clusters = FuzzyFunctions.fuzzyCMeans(listaDesconhecidos, kCurto, this.ensemble.fuzzification);
         List<CentroidCluster> centroides = clusters.getClusters();
         List<Double> silhuetas = FuzzyFunctions.fuzzySilhouette(clusters, listaDesconhecidos, this.ensemble.alpha);
@@ -178,7 +242,7 @@ public class OnlinePhase {
             }
         }
 
-        List<SPFMiC> sfMiCS = FuzzyFunctions.newSeparateExamplesByClusterClassifiedByFuzzyCMeans(listaDesconhecidos, clusters, -1, this.ensemble.alpha, this.ensemble.theta, minWeight);
+        List<SPFMiC> sfMiCS = FuzzyFunctions.newSeparateExamplesByClusterClassifiedByFuzzyCMeans(listaDesconhecidos, clusters, -1, this.ensemble.alpha, this.ensemble.theta, minWeight, t);
         List<SPFMiC> sfmicsConhecidos = ensemble.getAllSPFMiCs();
         List<Double> frs = new ArrayList<>();
 
