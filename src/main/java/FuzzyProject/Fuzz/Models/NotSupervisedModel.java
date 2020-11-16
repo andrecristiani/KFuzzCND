@@ -11,10 +11,12 @@ public class NotSupervisedModel {
 
     public double classify(Example example, int N, int K, int updated) {
         List<Double> tipicidades = new ArrayList<>();
+        List<Double> todasTipicidades = new ArrayList<>();
         List<SPFMiC> auxSPFMiCs = new ArrayList<>();
         boolean isOutlier = true;
         for(int i=0; i<this.spfMiCS.size(); i++) {
             double distancia = DistanceMeasures.calculaDistanciaEuclidiana(example, this.spfMiCS.get(i).getCentroide());
+            todasTipicidades.add(this.spfMiCS.get(i).calculaTipicidade(example.getPonto(), N, K));
             if(distancia <= this.spfMiCS.get(i).getRadius()) {
                 isOutlier = false;
                 tipicidades.add(this.spfMiCS.get(i).calculaTipicidade(example.getPonto(), N, K));
@@ -25,6 +27,9 @@ public class NotSupervisedModel {
         if(isOutlier) {
             return -1;
         }
+
+        Double maxValTodas = Collections.max(todasTipicidades);
+        int indexMaxTodas = todasTipicidades.indexOf(maxValTodas);
 
         Double maxVal = Collections.max(tipicidades);
         int indexMax = tipicidades.indexOf(maxVal);
@@ -38,11 +43,15 @@ public class NotSupervisedModel {
 
     public void removeOldSPFMiCs(int ts, int currentTime) {
         List<SPFMiC> spfMiCSAux = new ArrayList<>();
+        int k = 0;
         for(int i=0; i<spfMiCS.size(); i++) {
-            if(currentTime - spfMiCS.get(i).getT() > ts) {
+            double sub = currentTime - spfMiCS.get(i).getUpdated();
+            if(currentTime - spfMiCS.get(i).getT() > ts && currentTime - spfMiCS.get(i).getUpdated() > ts) {
                 spfMiCSAux.remove(spfMiCS.get(i));
+                k++;
             }
         }
+        System.out.println("Ns removeu " + k + " SPFMiCs");
         this.spfMiCS = spfMiCSAux;
     }
 }

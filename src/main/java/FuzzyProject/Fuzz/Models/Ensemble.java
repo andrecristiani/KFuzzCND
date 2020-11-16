@@ -2,9 +2,7 @@ package FuzzyProject.Fuzz.Models;
 
 import FuzzyProject.Fuzz.Utils.DistanceMeasures;
 import FuzzyProject.Fuzz.Utils.FuzzyFunctions;
-import org.apache.commons.math3.ml.clustering.CentroidCluster;
 import org.apache.commons.math3.ml.clustering.FuzzyKMeansClusterer;
-import weka.classifiers.trees.J48;
 import weka.core.Instance;
 import weka.core.Instances;
 
@@ -22,8 +20,6 @@ public class Ensemble {
     public int K;
     public int N;
     public int minWeight;
-    public MaxTipicity allTipMax;
-    public double thetaAdapter = 0;
     public List<Map<Double, List<SPFMiC>>> ensembleOfClassifiers = new ArrayList<>();
     public List<Double> knowLabels = new ArrayList<>();
 
@@ -64,37 +60,6 @@ public class Ensemble {
             }
         }
     }
-
-//    public double classify(Instance ins) throws Exception {
-//
-//        Map<Double, Integer> numeroVotos = new HashMap<>();
-//
-//        List<String> votos = new ArrayList<>();
-//        for (int i = 0; i < ensembleOfClassifiers.size(); i++) {
-//            Map<Double, List<SPFMiC>> classifier = this.ensembleOfClassifiers.get(i);
-//            List<SPFMiC> allSPFMiCSOfClassifier = this.getAllSPFMiCsFromClassifier(classifier);
-//            double rotuloVotado = this.classify(allSPFMiCSOfClassifier, new Example(ins.toDoubleArray(), true));
-//            if(numeroVotos.containsKey(rotuloVotado)) {
-//                numeroVotos.replace(rotuloVotado, numeroVotos.get(rotuloVotado) + 1);
-//            } else {
-//                numeroVotos.put(rotuloVotado, 1);
-//            }
-//        }
-//
-//        int valorMaior = -1;
-//        double indiceMaior = 0;
-//
-//        Set<Double> chavesAux = numeroVotos.keySet();
-//        Object[] chaves = chavesAux.toArray();
-//        for(int i=0; i<numeroVotos.size(); i++) {
-//            if(valorMaior < numeroVotos.get(chaves[i])) {
-//                valorMaior = numeroVotos.get(chaves[i]);
-//                indiceMaior = (double) chaves[i];
-//            }
-//        }
-//
-//        return indiceMaior;
-//    }
 
     public double classifyNew(Instance ins, int updateTime) throws Exception {
         List<SPFMiC> allSPFMiCSOfClassifier = new ArrayList<>();
@@ -142,9 +107,9 @@ public class Ensemble {
 
     public List<Example> trainNewClassifier(List<Example> chunk, int t) throws Exception {
         List<Example> newChunk = new ArrayList<>();
-        if(this.ensembleOfClassifiers.size() >= tamanhoMaximo) {
-            this.removeWorstClassifier(chunk);
-        }
+//        if(this.ensembleOfClassifiers.size() >= tamanhoMaximo) {
+//            this.removeWorstClassifier(chunk);
+//        }
         Map<Double, List<Example>> examplesByClass = FuzzyFunctions.separateByClasses(chunk);
         List<Double> classes = new ArrayList<>();
         Map<Double, List<SPFMiC>> classifier = new HashMap<>();
@@ -238,5 +203,26 @@ public class Ensemble {
         Double maxVal = Collections.max(tipicidades);
         int indexMax = tipicidades.indexOf(maxVal);
         return spfMiCS.get(indexMax).getRotulo();
+    }
+
+    public void removeOldSPFMiCs(int ts, int currentTime) {
+        int l = 0;
+        for (int i = 0; i < ensembleOfClassifiers.size(); i++) {
+            Map<Double, List<SPFMiC>> classifier = this.ensembleOfClassifiers.get(i);
+            List<Double> keys = new ArrayList<>();
+            keys.addAll(classifier.keySet());
+            for(int j=0; j<classifier.size(); j++) {
+                List<SPFMiC> spfMiCSatuais = classifier.get(keys.get(j));
+                List<SPFMiC> spfMiCSAux = spfMiCSatuais;
+                for(int k=0; k<spfMiCSatuais.size(); k++) {
+                    if(currentTime - spfMiCSatuais.get(k).getT() > ts && currentTime - spfMiCSatuais.get(k).getUpdated() > ts) {
+                        spfMiCSAux.remove(spfMiCSatuais.get(k));
+                        l++;
+                    }
+                }
+                classifier.put(keys.get(j), spfMiCSAux);
+            }
+        }
+        System.out.println("Supervised removeu " + l + " SPFMiCs");
     }
 }

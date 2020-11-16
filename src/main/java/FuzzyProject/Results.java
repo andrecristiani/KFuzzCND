@@ -14,9 +14,11 @@ public class Results {
         String caminho = "";
         String current = (new File(".")).getCanonicalPath();
         caminho = current + "/" + dataset + "/";
+        //rbf
         List<ResultsForExample> results = HandlesFiles.loadResults(caminho, dataset, 46586);
 //        List<ResultsForExample> results = HandlesFiles.loadResults(caminho, dataset, 48848);
 //        List<ResultsForExample> results = HandlesFiles.loadResults(caminho, dataset, 531012);
+        //moa
 //        List<ResultsForExample> results = HandlesFiles.loadResults(caminho, dataset, 90000);
         int unknown = 0;
         int acertos = 0;

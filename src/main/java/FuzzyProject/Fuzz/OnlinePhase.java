@@ -88,10 +88,14 @@ public class OnlinePhase {
                         if(nsModel.spfMiCS.size() > 0) {
                             this.results = this.verifyIfExistNewClassInNSModel(labeledMem, this.results, i);
                         }
+                        //TODO: pensar em uma estratégia para remover SPFMiCs que não são removidos automaticamente do NSModel
+                        //TODO: calcular a tipicidade apenas para SPFMiCs que o exemplo está dentro do raio
+                        nsModel.removeOldSPFMiCs(latencia + (ts*2), i);
+                        ensemble.removeOldSPFMiCs(latencia*2, i);
+                        System.out.println("");
                         labeledMem = comite.trainNewClassifier(labeledMem, i);
                     }
                     nExeTemp++;
-//                    nsModel.removeOldSPFMiCs(latencia, i);
                 }
 
                 this.removeOldUnknown(unkMem, ts, i);
@@ -133,54 +137,6 @@ public class OnlinePhase {
                 classifier.put(classes.get(j), spfmics);
             }
         }
-
-//        for(int i=0; i<spfmics.size(); i++) {
-//            if(nsModel.spfMiCS.size() > 0) {
-//                if (!spfmics.get(i).isNull()) {
-//                    frs.clear();
-//                    double dist2 = Double.MAX_VALUE;
-//                    SPFMiC spfMiCMenorDistancia = new SPFMiC();
-//                    for (int j = 0; j < spfMiCSInNSModel.size(); j++) {
-//                        double dist3 = DistanceMeasures.calculaDistanciaEuclidiana(spfmics.get(i).getCentroide(), spfMiCSInNSModel.get(j).getCentroide());
-//                        if (dist3 < dist2) {
-//                            dist2 = dist3;
-//                            spfMiCMenorDistancia = spfMiCSInNSModel.get(j);
-//                        }
-//
-//                        double di = spfMiCSInNSModel.get(j).getRadius();
-//                        double dj = spfmics.get(i).getRadius();
-//                        double dist = (di + dj) / DistanceMeasures.calculaDistanciaEuclidiana(spfMiCSInNSModel.get(j).getCentroide(), spfmics.get(i).getCentroide());
-//                        frs.add((di + dj) / dist);
-//                    }
-//
-//                    Double minFr = Collections.min(frs);
-//                    int indexMinFr = frs.indexOf(minFr);
-//                    if (minFr <= this.phi) {
-//                        System.err.println("Deu um spfmic");
-//                        if(spfmics.get(i).getRotulo() != nsModel.spfMiCS.get(indexMinFr).getRotuloReal()) {
-//                            System.err.println("Rotulos não batem");
-//                        }
-//                        for(int h=0; h<results.size(); h++) {
-//                            if(results.get(h).getRotuloClassificado() > 100) {
-//                                if (results.get(h).getRotuloClassificado() == nsModel.spfMiCS.get(indexMinFr).getRotulo()) {
-//                                    results.get(h).setRotuloClassificado(spfmics.get(i).getRotulo());
-//                                }
-//                            }
-//                        }
-//
-//                        List<SPFMiC> aux = new ArrayList<>();
-//                        for(int j=0; j<nsModel.spfMiCS.size(); j++) {
-//                            if(!(nsModel.spfMiCS.get(indexMinFr).getRotulo() == nsModel.spfMiCS.get(j).getRotulo()
-//                            && frs.get(j) < this.phi)) {
-//                                aux.add(nsModel.spfMiCS.get(j));
-//                            }
-//                        }
-//
-//                        nsModel.spfMiCS = aux;
-//                    }
-//                }
-//            }
-//        }
 
         for(int i=0; i<spfmics.size(); i++) {
             if(nsModel.spfMiCS.size() > 0) {
