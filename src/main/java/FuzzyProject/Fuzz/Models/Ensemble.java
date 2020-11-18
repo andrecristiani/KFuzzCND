@@ -151,27 +151,18 @@ public class Ensemble {
 
     public double classify(List<SPFMiC> spfMiCS, Example example, int updateTime) {
         List<Double> tipicidades = new ArrayList<>();
-        List<Double> distancias = new ArrayList<>();
+        List<Double> todasTipicidades = new ArrayList<>();
+        List<SPFMiC> auxSPFMiCs = new ArrayList<>();
         boolean isOutlier = true;
-        double minDistance = Double.MAX_VALUE;
-        int indexMinDistance = -2;
         for(int i=0; i<spfMiCS.size(); i++) {
-            tipicidades.add(spfMiCS.get(i).calculaTipicidade(example.getPonto(), this.N, this.K));
             double distancia = DistanceMeasures.calculaDistanciaEuclidiana(example, spfMiCS.get(i).getCentroide());
-            distancias.add(distancia);
-            if(distancia < minDistance) {
-                minDistance = distancia;
-                indexMinDistance = i;
-            }
+            todasTipicidades.add(spfMiCS.get(i).calculaTipicidade(example.getPonto(), N, K));
             if(distancia <= spfMiCS.get(i).getRadius()) {
                 isOutlier = false;
+                tipicidades.add(spfMiCS.get(i).calculaTipicidade(example.getPonto(), N, K));
+                auxSPFMiCs.add(spfMiCS.get(i));
             }
         }
-
-        Double minVal = Collections.min(distancias);
-        int indexMin = tipicidades.indexOf(minVal);
-
-//        System.out.println("Distância: " + distancias.get(indexMinDistance) + ", Raio: " + spfMiCS.get(indexMinDistance).getRadius() + ", Rotulo SPFMic: " + spfMiCS.get(indexMinDistance).getRotulo() + ", Rotulo Exemplo: " + example.getRotuloVerdadeiro() + ", Outlier: " + isOutlier);
 
         if(isOutlier) {
             return -1;
@@ -179,8 +170,12 @@ public class Ensemble {
 
         Double maxVal = Collections.max(tipicidades);
         int indexMax = tipicidades.indexOf(maxVal);
-        spfMiCS.get(indexMax).setUpdated(updateTime);
-        return spfMiCS.get(indexMax).getRotulo();
+
+        SPFMiC spfmic = auxSPFMiCs.get(indexMax);
+        int index = spfMiCS.indexOf(spfmic);
+
+        spfMiCS.get(index).setUpdated(updateTime);
+        return spfMiCS.get(index).getRotulo();
     }
 
     public double classifyWithoutTime(List<SPFMiC> spfMiCS, Example example) {
@@ -223,6 +218,6 @@ public class Ensemble {
                 classifier.put(keys.get(j), spfMiCSAux);
             }
         }
-        System.out.println("Supervised removeu " + l + " SPFMiCs");
+//        System.out.println("Supervised removeu " + l + " SPFMiCs");
     }
 }

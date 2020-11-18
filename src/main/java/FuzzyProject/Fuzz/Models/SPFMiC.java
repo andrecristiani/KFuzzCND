@@ -34,6 +34,7 @@ public class SPFMiC implements Instance {
         this.theta = theta;
         this.Mm = 1;
         this.Tn = 1;
+        this.updated = t;
         this.SSDe = 0;
         this.t = t;
     }

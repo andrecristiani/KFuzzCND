@@ -28,9 +28,6 @@ public class NotSupervisedModel {
             return -1;
         }
 
-        Double maxValTodas = Collections.max(todasTipicidades);
-        int indexMaxTodas = todasTipicidades.indexOf(maxValTodas);
-
         Double maxVal = Collections.max(tipicidades);
         int indexMax = tipicidades.indexOf(maxVal);
 
@@ -42,7 +39,7 @@ public class NotSupervisedModel {
     }
 
     public void removeOldSPFMiCs(int ts, int currentTime) {
-        List<SPFMiC> spfMiCSAux = new ArrayList<>();
+        List<SPFMiC> spfMiCSAux = this.spfMiCS;
         int k = 0;
         for(int i=0; i<spfMiCS.size(); i++) {
             double sub = currentTime - spfMiCS.get(i).getUpdated();
@@ -51,7 +48,7 @@ public class NotSupervisedModel {
                 k++;
             }
         }
-        System.out.println("Ns removeu " + k + " SPFMiCs");
+//        System.out.println("Ns removeu " + k + " SPFMiCs");
         this.spfMiCS = spfMiCSAux;
     }
 }

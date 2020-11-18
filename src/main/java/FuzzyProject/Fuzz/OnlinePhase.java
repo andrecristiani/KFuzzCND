@@ -57,6 +57,9 @@ public class OnlinePhase {
             for(int i=0, j=0, h=0; i<data.size(); i++, j++, h++) {
                 Instance ins = data.get(i);
                 Example exemplo = new Example(ins.toDoubleArray(), true, i);
+                if(exemplo.getRotuloVerdadeiro() == 4.0) {
+                    System.out.println("Esse");
+                }
                 double rotulo = comite.classifyNew(ins, i);
                 exemplo.setRotuloClassificado(rotulo);
                 if(rotulo == exemplo.getRotuloVerdadeiro()) {
@@ -73,7 +76,6 @@ public class OnlinePhase {
                     } else {
                         if(rotulo < 100 && rotulo != exemplo.getRotuloVerdadeiro()) {
                             erroNs++;
-                            rotulo = nsModel.classify(exemplo, ensemble.N, ensemble.K, i);
                         }
                     }
                 } else {
@@ -88,16 +90,12 @@ public class OnlinePhase {
                         if(nsModel.spfMiCS.size() > 0) {
                             this.results = this.verifyIfExistNewClassInNSModel(labeledMem, this.results, i);
                         }
-                        //TODO: pensar em uma estratégia para remover SPFMiCs que não são removidos automaticamente do NSModel
-                        //TODO: calcular a tipicidade apenas para SPFMiCs que o exemplo está dentro do raio
-                        nsModel.removeOldSPFMiCs(latencia + (ts*2), i);
-                        ensemble.removeOldSPFMiCs(latencia*2, i);
-                        System.out.println("");
                         labeledMem = comite.trainNewClassifier(labeledMem, i);
                     }
                     nExeTemp++;
                 }
 
+                ensemble.removeOldSPFMiCs(latencia + ts, i);
                 this.removeOldUnknown(unkMem, ts, i);
 
                 if(h == 1000) {
@@ -129,16 +127,28 @@ public class OnlinePhase {
         List<Double> classes = new ArrayList<>();
         Map<Double, List<SPFMiC>> classifier = new HashMap<>();
         classes.addAll(examplesByClass.keySet());
-        List<SPFMiC> spfmics = null;
+        List<SPFMiC> spfmics = new ArrayList<>();
         for(int j=0; j<examplesByClass.size(); j++) {
+            if(t>45000) {
+                System.out.println("Maior");
+            }
             if(examplesByClass.get(classes.get(j)).size() > this.ensemble.K) {
                 FuzzyKMeansClusterer clusters = FuzzyFunctions.fuzzyCMeans(examplesByClass.get(classes.get(j)), this.ensemble.K, this.ensemble.fuzzification);
-                spfmics = FuzzyFunctions.separateExamplesByClusterClassifiedByFuzzyCMeans(examplesByClass.get(classes.get(j)), clusters, classes.get(j), this.ensemble.alpha, this.ensemble.theta, this.ensemble.minWeight, t);
+                List<SPFMiC> spfMiCSAux = FuzzyFunctions.separateExamplesByClusterClassifiedByFuzzyCMeans(examplesByClass.get(classes.get(j)), clusters, classes.get(j), this.ensemble.alpha, this.ensemble.theta, this.ensemble.minWeight, t);
+                if(spfmics != null) {
+                    spfmics.addAll(spfMiCSAux);
+                }
                 classifier.put(classes.get(j), spfmics);
             }
         }
 
         for(int i=0; i<spfmics.size(); i++) {
+            if(spfmics.get(i).getRotulo() == 3.0) {
+                System.out.println("Rotulo 3");
+            }
+            if(spfmics.get(i).getRotulo() == 4.0) {
+                System.out.println("Rotulo 4");
+            }
             if(nsModel.spfMiCS.size() > 0) {
                 if (!spfmics.get(i).isNull()) {
                     frs.clear();
@@ -175,6 +185,8 @@ public class OnlinePhase {
                             if(!(nsModel.spfMiCS.get(indexMinFr).getRotulo() == nsModel.spfMiCS.get(j).getRotulo()
                                     && frs.get(j) < this.phi)) {
                                 aux.add(nsModel.spfMiCS.get(j));
+                            } else {
+                                System.out.println("teste");
                             }
                         }
 
