@@ -14,8 +14,6 @@ import weka.core.Instances;
 import weka.core.converters.ConverterUtils.DataSource;
 
 import java.util.*;
-import java.util.stream.IntStream;
-import java.util.stream.Stream;
 
 public class OnlinePhase {
 
@@ -57,9 +55,6 @@ public class OnlinePhase {
             for(int i=0, j=0, h=0; i<data.size(); i++, j++, h++) {
                 Instance ins = data.get(i);
                 Example exemplo = new Example(ins.toDoubleArray(), true, i);
-                if(exemplo.getRotuloVerdadeiro() == 4.0) {
-                    System.out.println("Esse");
-                }
                 double rotulo = comite.classifyNew(ins, i);
                 exemplo.setRotuloClassificado(rotulo);
                 if(rotulo == exemplo.getRotuloVerdadeiro()) {
@@ -89,16 +84,16 @@ public class OnlinePhase {
                     if(labeledMem.size() >= tChunk) {
                         if(nsModel.spfMiCS.size() > 0) {
                             this.results = this.verifyIfExistNewClassInNSModel(labeledMem, this.results, i);
+                            labeledMem.clear();
                         }
                         labeledMem = comite.trainNewClassifier(labeledMem, i);
                     }
                     nExeTemp++;
                 }
 
-                ensemble.removeOldSPFMiCs(latencia + ts, i);
-                this.removeOldUnknown(unkMem, ts, i);
-
                 if(h == 1000) {
+                    ensemble.removeOldSPFMiCs(latencia + ts, i);
+                    this.removeOldUnknown(unkMem, ts, i);
                     System.out.println(nsModel.spfMiCS.size());
                     System.out.println("Ponto: " + i);
                     System.out.println("Acertos: " + acertos);
@@ -129,9 +124,6 @@ public class OnlinePhase {
         classes.addAll(examplesByClass.keySet());
         List<SPFMiC> spfmics = new ArrayList<>();
         for(int j=0; j<examplesByClass.size(); j++) {
-            if(t>45000) {
-                System.out.println("Maior");
-            }
             if(examplesByClass.get(classes.get(j)).size() > this.ensemble.K) {
                 FuzzyKMeansClusterer clusters = FuzzyFunctions.fuzzyCMeans(examplesByClass.get(classes.get(j)), this.ensemble.K, this.ensemble.fuzzification);
                 List<SPFMiC> spfMiCSAux = FuzzyFunctions.separateExamplesByClusterClassifiedByFuzzyCMeans(examplesByClass.get(classes.get(j)), clusters, classes.get(j), this.ensemble.alpha, this.ensemble.theta, this.ensemble.minWeight, t);
@@ -143,12 +135,6 @@ public class OnlinePhase {
         }
 
         for(int i=0; i<spfmics.size(); i++) {
-            if(spfmics.get(i).getRotulo() == 3.0) {
-                System.out.println("Rotulo 3");
-            }
-            if(spfmics.get(i).getRotulo() == 4.0) {
-                System.out.println("Rotulo 4");
-            }
             if(nsModel.spfMiCS.size() > 0) {
                 if (!spfmics.get(i).isNull()) {
                     frs.clear();
@@ -185,8 +171,6 @@ public class OnlinePhase {
                             if(!(nsModel.spfMiCS.get(indexMinFr).getRotulo() == nsModel.spfMiCS.get(j).getRotulo()
                                     && frs.get(j) < this.phi)) {
                                 aux.add(nsModel.spfMiCS.get(j));
-                            } else {
-                                System.out.println("teste");
                             }
                         }
 
@@ -195,89 +179,92 @@ public class OnlinePhase {
                 }
             }
         }
+
         return results;
     }
 
     private List<Example> multiClassNoveltyDetection(List<Example> listaDesconhecidos, int kCurto, double phi, int minWeight, int t) {
-        FuzzyKMeansClusterer clusters = FuzzyFunctions.fuzzyCMeans(listaDesconhecidos, kCurto, this.ensemble.fuzzification);
-        List<CentroidCluster> centroides = clusters.getClusters();
-        List<Double> silhuetas = FuzzyFunctions.fuzzySilhouette(clusters, listaDesconhecidos, this.ensemble.alpha);
-        List<Integer> silhuetasValidas = new ArrayList<>();
+        if(listaDesconhecidos.size() > kCurto) {
+            FuzzyKMeansClusterer clusters = FuzzyFunctions.fuzzyCMeans(listaDesconhecidos, kCurto, this.ensemble.fuzzification);
+            List<CentroidCluster> centroides = clusters.getClusters();
+            List<Double> silhuetas = FuzzyFunctions.fuzzySilhouette(clusters, listaDesconhecidos, this.ensemble.alpha);
+            List<Integer> silhuetasValidas = new ArrayList<>();
 
-        for(int i=0; i<silhuetas.size(); i++) {
-            if(silhuetas.get(i) > 0 && centroides.get(i).getPoints().size() >= minWeight) {
-                silhuetasValidas.add(i);
-            }
-        }
-
-        List<SPFMiC> sfMiCS = FuzzyFunctions.newSeparateExamplesByClusterClassifiedByFuzzyCMeans(listaDesconhecidos, clusters, -1, this.ensemble.alpha, this.ensemble.theta, minWeight, t);
-        List<SPFMiC> sfmicsConhecidos = ensemble.getAllSPFMiCs();
-        List<Double> frs = new ArrayList<>();
-
-        for(int i=0; i<centroides.size(); i++) {
-            if(silhuetasValidas.contains(i) && !sfMiCS.get(i).isNull()) {
-                frs.clear();
-                for (int j = 0; j < sfmicsConhecidos.size(); j++) {
-                    double di = sfmicsConhecidos.get(j).getRadius();
-                    double dj = sfMiCS.get(i).getRadius();
-                    double dist = (di + dj) / DistanceMeasures.calculaDistanciaEuclidiana(sfmicsConhecidos.get(j).getCentroide(), sfMiCS.get(i).getCentroide());
-                    frs.add((di + dj) / dist);
+            for (int i = 0; i < silhuetas.size(); i++) {
+                if (silhuetas.get(i) > 0 && centroides.get(i).getPoints().size() >= minWeight) {
+                    silhuetasValidas.add(i);
                 }
+            }
 
-                Double minFr = Collections.min(frs);
-                int indexMinFr = frs.indexOf(minFr);
-                if (minFr <= phi) {
-                    sfMiCS.get(i).setRotulo(sfmicsConhecidos.get(indexMinFr).getRotulo());
-                    List<Example> examples = centroides.get(i).getPoints();
-                    HashMap<Double, Integer> rotulos = new HashMap<>();
-                    for(int j=0; j<examples.size(); j++) {
-                        listaDesconhecidos.remove(examples.get(j));
-                        if(rotulos.containsKey(examples.get(j).getRotuloVerdadeiro())) {
-                            rotulos.put(examples.get(j).getRotuloVerdadeiro(), rotulos.get(examples.get(j).getRotuloVerdadeiro()) + 1);
-                        } else {
-                            rotulos.put(examples.get(j).getRotuloVerdadeiro(), 1);
-                        }
-                    }
+            List<SPFMiC> sfMiCS = FuzzyFunctions.newSeparateExamplesByClusterClassifiedByFuzzyCMeans(listaDesconhecidos, clusters, -1, this.ensemble.alpha, this.ensemble.theta, minWeight, t);
+            List<SPFMiC> sfmicsConhecidos = ensemble.getAllSPFMiCs();
+            List<Double> frs = new ArrayList<>();
 
-                    Double[] keys = rotulos.keySet().toArray(new Double[0]);
-                    double maiorValor = Double.MIN_VALUE;
-                    double maiorRotulo = -1;
-                    for(int k=0; k<rotulos.size(); k++) {
-                        if(maiorValor < rotulos.get(keys[k])) {
-                            maiorValor = rotulos.get(keys[k]);
-                            maiorRotulo = keys[k];
-                        }
-                    }
-                    if(maiorRotulo != sfMiCS.get(i).getRotulo()) {
-                        System.err.println("Rotulo Diferente");
-                    }
-                    sfMiCS.get(i).setRotuloReal(maiorRotulo);
-                    nsModel.spfMiCS.add(sfMiCS.get(i));
-                } else {
-                    sfMiCS.get(i).setRotulo(this.generateNPLabel());
-                    List<Example> examples = centroides.get(i).getPoints();
-                    HashMap<Double, Integer> rotulos = new HashMap<>();
-                    for(int j=0; j<examples.size(); j++) {
-                        listaDesconhecidos.remove(examples.get(j));
-                        if(rotulos.containsKey(examples.get(j).getRotuloVerdadeiro())) {
-                            rotulos.put(examples.get(j).getRotuloVerdadeiro(), rotulos.get(examples.get(j).getRotuloVerdadeiro()) + 1);
-                        } else {
-                            rotulos.put(examples.get(j).getRotuloVerdadeiro(), 1);
-                        }
+            for (int i = 0; i < centroides.size(); i++) {
+                if (silhuetasValidas.contains(i) && !sfMiCS.get(i).isNull()) {
+                    frs.clear();
+                    for (int j = 0; j < sfmicsConhecidos.size(); j++) {
+                        double di = sfmicsConhecidos.get(j).getRadius();
+                        double dj = sfMiCS.get(i).getRadius();
+                        double dist = (di + dj) / DistanceMeasures.calculaDistanciaEuclidiana(sfmicsConhecidos.get(j).getCentroide(), sfMiCS.get(i).getCentroide());
+                        frs.add((di + dj) / dist);
                     }
 
-                    Double[] keys = rotulos.keySet().toArray(new Double[0]);
-                    double maiorValor = Double.MIN_VALUE;
-                    double maiorRotulo = -1;
-                    for(int k=0; k<rotulos.size(); k++) {
-                        if(maiorValor < rotulos.get(keys[k])) {
-                            maiorValor = rotulos.get(keys[k]);
-                            maiorRotulo = keys[k];
+                    Double minFr = Collections.min(frs);
+                    int indexMinFr = frs.indexOf(minFr);
+                    if (minFr <= phi) {
+                        sfMiCS.get(i).setRotulo(sfmicsConhecidos.get(indexMinFr).getRotulo());
+                        List<Example> examples = centroides.get(i).getPoints();
+                        HashMap<Double, Integer> rotulos = new HashMap<>();
+                        for (int j = 0; j < examples.size(); j++) {
+                            listaDesconhecidos.remove(examples.get(j));
+                            if (rotulos.containsKey(examples.get(j).getRotuloVerdadeiro())) {
+                                rotulos.put(examples.get(j).getRotuloVerdadeiro(), rotulos.get(examples.get(j).getRotuloVerdadeiro()) + 1);
+                            } else {
+                                rotulos.put(examples.get(j).getRotuloVerdadeiro(), 1);
+                            }
                         }
-                    }
 
-                    sfMiCS.get(i).setRotuloReal(maiorRotulo);
-                    nsModel.spfMiCS.add(sfMiCS.get(i));
+                        Double[] keys = rotulos.keySet().toArray(new Double[0]);
+                        double maiorValor = Double.MIN_VALUE;
+                        double maiorRotulo = -1;
+                        for (int k = 0; k < rotulos.size(); k++) {
+                            if (maiorValor < rotulos.get(keys[k])) {
+                                maiorValor = rotulos.get(keys[k]);
+                                maiorRotulo = keys[k];
+                            }
+                        }
+                        if (maiorRotulo != sfMiCS.get(i).getRotulo()) {
+                            System.err.println("Rotulo Diferente");
+                        }
+                        sfMiCS.get(i).setRotuloReal(maiorRotulo);
+                        nsModel.spfMiCS.add(sfMiCS.get(i));
+                    } else {
+                        sfMiCS.get(i).setRotulo(this.generateNPLabel());
+                        List<Example> examples = centroides.get(i).getPoints();
+                        HashMap<Double, Integer> rotulos = new HashMap<>();
+                        for (int j = 0; j < examples.size(); j++) {
+                            listaDesconhecidos.remove(examples.get(j));
+                            if (rotulos.containsKey(examples.get(j).getRotuloVerdadeiro())) {
+                                rotulos.put(examples.get(j).getRotuloVerdadeiro(), rotulos.get(examples.get(j).getRotuloVerdadeiro()) + 1);
+                            } else {
+                                rotulos.put(examples.get(j).getRotuloVerdadeiro(), 1);
+                            }
+                        }
+
+                        Double[] keys = rotulos.keySet().toArray(new Double[0]);
+                        double maiorValor = Double.MIN_VALUE;
+                        double maiorRotulo = -1;
+                        for (int k = 0; k < rotulos.size(); k++) {
+                            if (maiorValor < rotulos.get(keys[k])) {
+                                maiorValor = rotulos.get(keys[k]);
+                                maiorRotulo = keys[k];
+                            }
+                        }
+
+                        sfMiCS.get(i).setRotuloReal(maiorRotulo);
+                        nsModel.spfMiCS.add(sfMiCS.get(i));
+                    }
                 }
             }
         }

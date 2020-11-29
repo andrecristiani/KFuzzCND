@@ -8,7 +8,6 @@ import weka.core.Instances;
 import weka.core.converters.ConverterUtils;
 
 import java.io.File;
-import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
 

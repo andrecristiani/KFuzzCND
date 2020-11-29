@@ -5,6 +5,7 @@ import weka.core.Attribute;
 import weka.core.Instance;
 import weka.core.Instances;
 
+import java.util.Arrays;
 import java.util.Enumeration;
 
 public class Example implements Instance, Clusterable {
@@ -380,5 +381,12 @@ public class Example implements Instance, Clusterable {
     @Override
     public double[] getPoint() {
         return this.ponto;
+    }
+
+    @Override
+    public String toString() {
+        return "Example{" +
+                "ponto=" + Arrays.toString(ponto) +
+                '}';
     }
 }
