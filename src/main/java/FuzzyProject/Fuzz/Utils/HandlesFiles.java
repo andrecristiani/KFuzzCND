@@ -78,6 +78,41 @@ public class HandlesFiles {
         return null;
     }
 
+    public static ArrayList<ResultsForExample> loadResults(String caminho, String dataset, String algoritmo, int numAnalises) {
+        BufferedReader inReader = null;
+        try {
+            inReader = new BufferedReader(new FileReader(caminho + dataset +"-" + algoritmo + "-results.txt"));
+        } catch (FileNotFoundException var11) {
+            System.err.println("carregaParticao - Não foi possível abrir o arquivo: " + caminho);
+            System.exit(1);
+        }
+
+        try {
+            String line = null;
+            StringTokenizer str = null;
+            ArrayList<ResultsForExample> measures = new ArrayList<>();
+            for(int i=0; i<numAnalises; i++) {
+                line = inReader.readLine();
+                str = new StringTokenizer(line);
+                String temp = str.nextToken();
+                str.nextToken();
+                str.nextToken();
+                str.nextToken();
+                String temp5 = str.nextToken();
+                str.nextToken();
+                str.nextToken();
+                String temp8 = str.nextToken();
+                measures.add(new ResultsForExample(temp5,temp8));
+                System.out.println();
+            };
+            inReader.close();
+            return measures;
+        } catch (IOException var9) {
+            System.err.println(var9.getMessage());
+        }
+        return null;
+    }
+
     public static List<AcuraciaMedidas> carregaAcuracias(String caminho, int numAnalises) {
         BufferedReader inReader = null;
         List<String> teste = new ArrayList<>();
