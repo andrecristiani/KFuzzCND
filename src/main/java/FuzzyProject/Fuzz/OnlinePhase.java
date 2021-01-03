@@ -55,7 +55,7 @@ public class OnlinePhase {
             for(int i=0, j=0, h=0; i<data.size(); i++, j++, h++) {
                 Instance ins = data.get(i);
                 Example exemplo = new Example(ins.toDoubleArray(), true, i);
-                double rotulo = comite.classifyNew(ins, i);
+                double rotulo = this.ensemble.classifyNew(ins, i);
                 exemplo.setRotuloClassificado(rotulo);
                 if(rotulo == exemplo.getRotuloVerdadeiro()) {
                     acertos++;
@@ -84,17 +84,22 @@ public class OnlinePhase {
                     if(labeledMem.size() >= tChunk) {
                         if(nsModel.spfMiCS.size() > 0) {
                             this.results = this.verifyIfExistNewClassInNSModel(labeledMem, this.results, i);
-                            labeledMem.clear();
                         }
-                        labeledMem = comite.trainNewClassifier(labeledMem, i);
+                        System.out.println("Antes: " + this.ensemble.getAllSPFMiCs().size());
+                        labeledMem = this.ensemble.trainNewClassifier(labeledMem, i);
+                        System.out.println("Depois: " + this.ensemble.getAllSPFMiCs().size());
                     }
                     nExeTemp++;
                 }
 
+                ensemble.removeOldSPFMiCs(latencia + ts, i);
+                this.removeOldUnknown(unkMem, ts, i);
+
                 if(h == 1000) {
-                    ensemble.removeOldSPFMiCs(latencia + ts, i);
-                    this.removeOldUnknown(unkMem, ts, i);
-                    System.out.println(nsModel.spfMiCS.size());
+                    System.out.println("Ensemble: " + ensemble.getAllSPFMiCs().size());
+                    System.out.println("NSModelSize: " + nsModel.spfMiCS.size());
+//                    ensemble.removeOldSPFMiCs(latencia + ts, i);
+//                    this.removeOldUnknown(unkMem, ts, i);
                     System.out.println("Ponto: " + i);
                     System.out.println("Acertos: " + acertos);
                     System.out.println("Erros separado: " + erroSeparado);
@@ -209,62 +214,65 @@ public class OnlinePhase {
                         double dist = (di + dj) / DistanceMeasures.calculaDistanciaEuclidiana(sfmicsConhecidos.get(j).getCentroide(), sfMiCS.get(i).getCentroide());
                         frs.add((di + dj) / dist);
                     }
-
-                    Double minFr = Collections.min(frs);
-                    int indexMinFr = frs.indexOf(minFr);
-                    if (minFr <= phi) {
-                        sfMiCS.get(i).setRotulo(sfmicsConhecidos.get(indexMinFr).getRotulo());
-                        List<Example> examples = centroides.get(i).getPoints();
-                        HashMap<Double, Integer> rotulos = new HashMap<>();
-                        for (int j = 0; j < examples.size(); j++) {
-                            listaDesconhecidos.remove(examples.get(j));
-                            if (rotulos.containsKey(examples.get(j).getRotuloVerdadeiro())) {
-                                rotulos.put(examples.get(j).getRotuloVerdadeiro(), rotulos.get(examples.get(j).getRotuloVerdadeiro()) + 1);
-                            } else {
-                                rotulos.put(examples.get(j).getRotuloVerdadeiro(), 1);
+                    System.out.println(sfMiCS.size());
+                    System.out.println(sfmicsConhecidos.size());
+//                    if(frs.size() > 0) {
+                        Double minFr = Collections.min(frs);
+                        int indexMinFr = frs.indexOf(minFr);
+                        if (minFr <= phi) {
+                            sfMiCS.get(i).setRotulo(sfmicsConhecidos.get(indexMinFr).getRotulo());
+                            List<Example> examples = centroides.get(i).getPoints();
+                            HashMap<Double, Integer> rotulos = new HashMap<>();
+                            for (int j = 0; j < examples.size(); j++) {
+                                listaDesconhecidos.remove(examples.get(j));
+                                if (rotulos.containsKey(examples.get(j).getRotuloVerdadeiro())) {
+                                    rotulos.put(examples.get(j).getRotuloVerdadeiro(), rotulos.get(examples.get(j).getRotuloVerdadeiro()) + 1);
+                                } else {
+                                    rotulos.put(examples.get(j).getRotuloVerdadeiro(), 1);
+                                }
                             }
-                        }
 
-                        Double[] keys = rotulos.keySet().toArray(new Double[0]);
-                        double maiorValor = Double.MIN_VALUE;
-                        double maiorRotulo = -1;
-                        for (int k = 0; k < rotulos.size(); k++) {
-                            if (maiorValor < rotulos.get(keys[k])) {
-                                maiorValor = rotulos.get(keys[k]);
-                                maiorRotulo = keys[k];
+                            Double[] keys = rotulos.keySet().toArray(new Double[0]);
+                            double maiorValor = Double.MIN_VALUE;
+                            double maiorRotulo = -1;
+                            for (int k = 0; k < rotulos.size(); k++) {
+                                if (maiorValor < rotulos.get(keys[k])) {
+                                    maiorValor = rotulos.get(keys[k]);
+                                    maiorRotulo = keys[k];
+                                }
                             }
-                        }
-                        if (maiorRotulo != sfMiCS.get(i).getRotulo()) {
-                            System.err.println("Rotulo Diferente");
-                        }
-                        sfMiCS.get(i).setRotuloReal(maiorRotulo);
-                        nsModel.spfMiCS.add(sfMiCS.get(i));
-                    } else {
-                        sfMiCS.get(i).setRotulo(this.generateNPLabel());
-                        List<Example> examples = centroides.get(i).getPoints();
-                        HashMap<Double, Integer> rotulos = new HashMap<>();
-                        for (int j = 0; j < examples.size(); j++) {
-                            listaDesconhecidos.remove(examples.get(j));
-                            if (rotulos.containsKey(examples.get(j).getRotuloVerdadeiro())) {
-                                rotulos.put(examples.get(j).getRotuloVerdadeiro(), rotulos.get(examples.get(j).getRotuloVerdadeiro()) + 1);
-                            } else {
-                                rotulos.put(examples.get(j).getRotuloVerdadeiro(), 1);
+                            if (maiorRotulo != sfMiCS.get(i).getRotulo()) {
+                                System.err.println("Rotulo Diferente");
                             }
-                        }
+                            sfMiCS.get(i).setRotuloReal(maiorRotulo);
+                            nsModel.spfMiCS.add(sfMiCS.get(i));
+                        } else {
+                            sfMiCS.get(i).setRotulo(this.generateNPLabel());
+                            List<Example> examples = centroides.get(i).getPoints();
+                            HashMap<Double, Integer> rotulos = new HashMap<>();
+                            for (int j = 0; j < examples.size(); j++) {
+                                listaDesconhecidos.remove(examples.get(j));
+                                if (rotulos.containsKey(examples.get(j).getRotuloVerdadeiro())) {
+                                    rotulos.put(examples.get(j).getRotuloVerdadeiro(), rotulos.get(examples.get(j).getRotuloVerdadeiro()) + 1);
+                                } else {
+                                    rotulos.put(examples.get(j).getRotuloVerdadeiro(), 1);
+                                }
+                            }
 
-                        Double[] keys = rotulos.keySet().toArray(new Double[0]);
-                        double maiorValor = Double.MIN_VALUE;
-                        double maiorRotulo = -1;
-                        for (int k = 0; k < rotulos.size(); k++) {
-                            if (maiorValor < rotulos.get(keys[k])) {
-                                maiorValor = rotulos.get(keys[k]);
-                                maiorRotulo = keys[k];
+                            Double[] keys = rotulos.keySet().toArray(new Double[0]);
+                            double maiorValor = Double.MIN_VALUE;
+                            double maiorRotulo = -1;
+                            for (int k = 0; k < rotulos.size(); k++) {
+                                if (maiorValor < rotulos.get(keys[k])) {
+                                    maiorValor = rotulos.get(keys[k]);
+                                    maiorRotulo = keys[k];
+                                }
                             }
-                        }
 
-                        sfMiCS.get(i).setRotuloReal(maiorRotulo);
-                        nsModel.spfMiCS.add(sfMiCS.get(i));
-                    }
+                            sfMiCS.get(i).setRotuloReal(maiorRotulo);
+                            nsModel.spfMiCS.add(sfMiCS.get(i));
+                        }
+//                    }
                 }
             }
         }

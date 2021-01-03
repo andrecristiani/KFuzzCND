@@ -17,7 +17,7 @@ public class NotSupervisedModel {
         for(int i=0; i<this.spfMiCS.size(); i++) {
             double distancia = DistanceMeasures.calculaDistanciaEuclidiana(example, this.spfMiCS.get(i).getCentroide());
             todasTipicidades.add(this.spfMiCS.get(i).calculaTipicidade(example.getPonto(), N, K));
-            if(distancia <= this.spfMiCS.get(i).getRadius()) {
+            if(distancia <= this.spfMiCS.get(i).getRadiusNsModel()) {
                 isOutlier = false;
                 tipicidades.add(this.spfMiCS.get(i).calculaTipicidade(example.getPonto(), N, K));
                 auxSPFMiCs.add(this.spfMiCS.get(i));

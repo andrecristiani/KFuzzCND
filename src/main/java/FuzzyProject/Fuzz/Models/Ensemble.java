@@ -201,6 +201,7 @@ public class Ensemble {
     }
 
     public void removeOldSPFMiCs(int ts, int currentTime) {
+//        System.out.println("Quantidade: " + this.getAllSPFMiCs().size());
         int l = 0;
         for (int i = 0; i < ensembleOfClassifiers.size(); i++) {
             Map<Double, List<SPFMiC>> classifier = this.ensembleOfClassifiers.get(i);
