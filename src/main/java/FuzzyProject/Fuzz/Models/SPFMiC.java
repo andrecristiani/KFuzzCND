@@ -247,7 +247,7 @@ public class SPFMiC implements Instance {
     }
 
     public double getRadiusNsModel() {
-        return Math.sqrt((this.SSDe/this.N)) * 2;
+        return Math.sqrt((this.SSDe/this.N));
     }
 
     @Override

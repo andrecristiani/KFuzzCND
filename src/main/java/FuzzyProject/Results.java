@@ -18,9 +18,9 @@ public class Results {
 //        caminho = current + "/" + dataset + "/";
         caminho = "/home/andre/Desktop/ResultadosFinais/";
         //rbf
-//        String dataset = "rbf";
-//        List<ResultsForExample> resultsFuzzCND = HandlesFiles.loadResults(caminho, dataset, "FuzzCND", 46586);
-//        List<ResultsForExample> resultsECSMiner = HandlesFiles.loadResults(caminho, dataset, "ECSMiner", 46586);
+        String dataset = "rbf";
+        List<ResultsForExample> resultsFuzzCND = HandlesFiles.loadResults(caminho, dataset, "FuzzCND", 46586);
+        List<ResultsForExample> resultsECSMiner = HandlesFiles.loadResults(caminho, dataset, "ECSMiner", 46586);
         //cover
 //        String dataset = "cover";
 //        List<ResultsForExample> resultsFuzzCND = HandlesFiles.loadResults(caminho, dataset, "FuzzCND", 531012);
@@ -30,9 +30,9 @@ public class Results {
 //        List<ResultsForExample> resultsFuzzCND = HandlesFiles.loadResults(caminho, dataset, "FuzzCND", 445230);
 //        List<ResultsForExample> resultsECSMiner = HandlesFiles.loadResults(caminho, dataset, "ECSMiner", 445230);
         //moa
-        String dataset = "moa";
-        List<ResultsForExample> resultsFuzzCND = HandlesFiles.loadResults(caminho, dataset, "FuzzCND", 90000);
-        List<ResultsForExample> resultsECSMiner = HandlesFiles.loadResults(caminho, dataset, "ECSMiner", 90000);
+//        String dataset = "moa";
+//        List<ResultsForExample> resultsFuzzCND = HandlesFiles.loadResults(caminho, dataset, "FuzzCND", 90000);
+//        List<ResultsForExample> resultsECSMiner = HandlesFiles.loadResults(caminho, dataset, "ECSMiner", 90000);
         int unknown = 0;
         int acertos = 0;
         int acertosCount = 0;
