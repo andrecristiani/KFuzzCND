@@ -73,6 +73,18 @@ public class Ensemble {
         return rotuloVotado;
     }
 
+    public double classifyComErro(Instance ins, int updateTime) throws Exception {
+        List<SPFMiC> allSPFMiCSOfClassifier = new ArrayList<>();
+        for (int i = 0; i < ensembleOfClassifiers.size(); i++) {
+            Map<Double, List<SPFMiC>> classifier = this.ensembleOfClassifiers.get(i);
+            allSPFMiCSOfClassifier.addAll(this.getAllSPFMiCsFromClassifier(classifier));
+        }
+
+        double rotuloVotado = this.classify(allSPFMiCSOfClassifier, new Example(ins.toDoubleArray(), true), updateTime);
+
+        return rotuloVotado;
+    }
+
     private void removeWorstClassifier(List<Example> exemplosRotulados) throws Exception {
         System.err.println("removendo classificador");
         double[] pontuacaoArvores = new double[this.ensembleOfClassifiers.size()];
@@ -107,9 +119,6 @@ public class Ensemble {
 
     public List<Example> trainNewClassifier(List<Example> chunk, int t) throws Exception {
         List<Example> newChunk = new ArrayList<>();
-//        if(this.ensembleOfClassifiers.size() >= tamanhoMaximo) {
-//            this.removeWorstClassifier(chunk);
-//        }
         Map<Double, List<Example>> examplesByClass = FuzzyFunctions.separateByClasses(chunk);
         List<Double> classes = new ArrayList<>();
         Map<Double, List<SPFMiC>> classifier = new HashMap<>();
@@ -151,14 +160,16 @@ public class Ensemble {
 
     public double classify(List<SPFMiC> spfMiCS, Example example, int updateTime) {
         List<Double> tipicidades = new ArrayList<>();
+        List<Double> distancias = new ArrayList<>();
         List<Double> todasTipicidades = new ArrayList<>();
         List<SPFMiC> auxSPFMiCs = new ArrayList<>();
         boolean isOutlier = true;
         for(int i=0; i<spfMiCS.size(); i++) {
             double distancia = DistanceMeasures.calculaDistanciaEuclidiana(example, spfMiCS.get(i).getCentroide());
             todasTipicidades.add(spfMiCS.get(i).calculaTipicidade(example.getPonto(), N, K));
-            if(distancia <= spfMiCS.get(i).getRadius()) {
+            if(distancia <= spfMiCS.get(i).getRadiusWithWeight()) {
                 isOutlier = false;
+                distancias.add(distancia);
                 tipicidades.add(spfMiCS.get(i).calculaTipicidade(example.getPonto(), N, K));
                 auxSPFMiCs.add(spfMiCS.get(i));
             }
@@ -173,7 +184,7 @@ public class Ensemble {
 
         SPFMiC spfmic = auxSPFMiCs.get(indexMax);
         int index = spfMiCS.indexOf(spfmic);
-
+//        System.out.println(spfMiCS.get(index).getUpdated());
         spfMiCS.get(index).setUpdated(updateTime);
         return spfMiCS.get(index).getRotulo();
     }
@@ -186,7 +197,7 @@ public class Ensemble {
             tipicidades.add(spfMiCS.get(i).calculaTipicidade(example.getPonto(), this.N, this.K));
             double distancia = DistanceMeasures.calculaDistanciaEuclidiana(example, spfMiCS.get(i).getCentroide());
             distancias.add(distancia);
-            if(distancia <= spfMiCS.get(i).getRadius()) {
+            if(distancia <= spfMiCS.get(i).getRadiusWithWeight()) {
                 isOutlier = false;
             }
         }
@@ -201,8 +212,6 @@ public class Ensemble {
     }
 
     public void removeOldSPFMiCs(int ts, int currentTime) {
-//        System.out.println("Quantidade: " + this.getAllSPFMiCs().size());
-        int l = 0;
         for (int i = 0; i < ensembleOfClassifiers.size(); i++) {
             Map<Double, List<SPFMiC>> classifier = this.ensembleOfClassifiers.get(i);
             List<Double> keys = new ArrayList<>();
@@ -213,12 +222,10 @@ public class Ensemble {
                 for(int k=0; k<spfMiCSatuais.size(); k++) {
                     if(currentTime - spfMiCSatuais.get(k).getT() > ts && currentTime - spfMiCSatuais.get(k).getUpdated() > ts) {
                         spfMiCSAux.remove(spfMiCSatuais.get(k));
-                        l++;
                     }
                 }
                 classifier.put(keys.get(j), spfMiCSAux);
             }
         }
-//        System.out.println("Supervised removeu " + l + " SPFMiCs");
     }
 }

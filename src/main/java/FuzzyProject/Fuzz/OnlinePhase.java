@@ -74,7 +74,10 @@ public class OnlinePhase {
                         }
                     }
                 } else {
+//                    System.err.println("Verdadeiro: " + exemplo.getRotuloVerdadeiro());
+//                    System.err.println("Classificado: " + exemplo.getRotuloClassificado());
                     erroSeparado++;
+//                    this.ensemble.classifyComErro(ins, i);
                 }
                 results.add(exemplo);
                 this.exemplosEsperandoTempo.add(exemplo);
@@ -96,8 +99,6 @@ public class OnlinePhase {
                 this.removeOldUnknown(unkMem, ts, i);
 
                 if(h == 1000) {
-                    System.out.println("Ensemble: " + ensemble.getAllSPFMiCs().size());
-                    System.out.println("NSModelSize: " + nsModel.spfMiCS.size());
 //                    ensemble.removeOldSPFMiCs(latencia + ts, i);
 //                    this.removeOldUnknown(unkMem, ts, i);
                     System.out.println("Ponto: " + i);
@@ -214,8 +215,8 @@ public class OnlinePhase {
                         double dist = (di + dj) / DistanceMeasures.calculaDistanciaEuclidiana(sfmicsConhecidos.get(j).getCentroide(), sfMiCS.get(i).getCentroide());
                         frs.add((di + dj) / dist);
                     }
-                    System.out.println(sfMiCS.size());
-                    System.out.println(sfmicsConhecidos.size());
+//                    System.out.println(sfMiCS.size());
+//                    System.out.println(sfmicsConhecidos.size());
 //                    if(frs.size() > 0) {
                         Double minFr = Collections.min(frs);
                         int indexMinFr = frs.indexOf(minFr);

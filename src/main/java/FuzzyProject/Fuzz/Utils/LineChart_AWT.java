@@ -7,6 +7,7 @@ import org.jfree.chart.axis.NumberAxis;
 import org.jfree.chart.axis.NumberTickUnit;
 import org.jfree.chart.axis.ValueAxis;
 import org.jfree.chart.plot.PlotOrientation;
+import org.jfree.chart.plot.ValueMarker;
 import org.jfree.chart.plot.XYPlot;
 import org.jfree.chart.renderer.xy.XYItemRenderer;
 import org.jfree.data.xy.XYDataset;
@@ -45,7 +46,7 @@ public class LineChart_AWT extends ApplicationFrame {
         dataset = createDatasetAcuracia(acuracias, rotuloClassificadores);
         String label = "Accuracy";
         JFreeChart lineChart = ChartFactory.createXYLineChart(
-                "",
+                chartTitle,
                 "Evaluation moments",label,
                 dataset,
                 PlotOrientation.VERTICAL,
@@ -55,7 +56,7 @@ public class LineChart_AWT extends ApplicationFrame {
         XYPlot xyplot = (XYPlot) lineChart.getPlot();
 
         ValueAxis rangeAxis = xyplot.getRangeAxis();
-        rangeAxis.setRange(0.0, 100);
+        rangeAxis.setRange(0.0, 105);
 
         rangeAxis.setStandardTickUnits(NumberAxis.createIntegerTickUnits());
 
@@ -64,7 +65,7 @@ public class LineChart_AWT extends ApplicationFrame {
 
         final NumberAxis domainAxis = (NumberAxis) xyplot.getDomainAxis();
         //domainAxis.setTickUnit(new NumberTickUnit(100));
-        domainAxis.setTickUnit(new NumberTickUnit(2));
+        domainAxis.setTickUnit(new NumberTickUnit(5));
 
 //        final XYPlot plot = lineChart.getXYPlot();
 //        ValueMarker marker;
@@ -88,19 +89,93 @@ public class LineChart_AWT extends ApplicationFrame {
 //        plot.addDomainMarker(marker);
 
         //RBF
+        final XYPlot plot = lineChart.getXYPlot();
+        ValueMarker marker;
+        //vertical
+        marker = new ValueMarker(8);
+        marker.setPaint(Color.gray);
+        marker.setStroke(new BasicStroke(1.5f));
+        plot.addDomainMarker(marker);
+
+        marker = new ValueMarker(42);
+        marker.setPaint(Color.gray);
+        marker.setStroke(new BasicStroke(1.5f));
+        plot.addDomainMarker(marker);
+
+
+        //synedc
 //        final XYPlot plot = lineChart.getXYPlot();
 //        ValueMarker marker;
 //        //vertical
-//        marker = new ValueMarker(7);
+//        marker = new ValueMarker(171);
 //        marker.setPaint(Color.gray);
 //        marker.setStroke(new BasicStroke(1.5f));
 //        plot.addDomainMarker(marker);
 //
-//        marker = new ValueMarker(41);
+//        marker = new ValueMarker(158);
 //        marker.setPaint(Color.gray);
 //        marker.setStroke(new BasicStroke(1.5f));
 //        plot.addDomainMarker(marker);
-
+//
+//        marker = new ValueMarker(146);
+//        marker.setPaint(Color.gray);
+//        marker.setStroke(new BasicStroke(1.5f));
+//        plot.addDomainMarker(marker);
+//
+//        marker = new ValueMarker(133);
+//        marker.setPaint(Color.gray);
+//        marker.setStroke(new BasicStroke(1.5f));
+//        plot.addDomainMarker(marker);
+//
+//        marker = new ValueMarker(121);
+//        marker.setPaint(Color.gray);
+//        marker.setStroke(new BasicStroke(1.5f));
+//        plot.addDomainMarker(marker);
+//
+//        marker = new ValueMarker(108);
+//        marker.setPaint(Color.gray);
+//        marker.setStroke(new BasicStroke(1.5f));
+//        plot.addDomainMarker(marker);
+//
+//        marker = new ValueMarker(96);
+//        marker.setPaint(Color.gray);
+//        marker.setStroke(new BasicStroke(1.5f));
+//        plot.addDomainMarker(marker);
+//
+//        marker = new ValueMarker(83);
+//        marker.setPaint(Color.gray);
+//        marker.setStroke(new BasicStroke(1.5f));
+//        plot.addDomainMarker(marker);
+//
+//        marker = new ValueMarker(71);
+//        marker.setPaint(Color.gray);
+//        marker.setStroke(new BasicStroke(1.5f));
+//        plot.addDomainMarker(marker);
+//
+//        marker = new ValueMarker(58);
+//        marker.setPaint(Color.gray);
+//        marker.setStroke(new BasicStroke(1.5f));
+//        plot.addDomainMarker(marker);
+//
+//        marker = new ValueMarker(46);
+//        marker.setPaint(Color.gray);
+//        marker.setStroke(new BasicStroke(1.5f));
+//        plot.addDomainMarker(marker);
+//
+//        marker = new ValueMarker(33);
+//        marker.setPaint(Color.gray);
+//        marker.setStroke(new BasicStroke(1.5f));
+//        plot.addDomainMarker(marker);
+//
+//        marker = new ValueMarker(21);
+//        marker.setPaint(Color.gray);
+//        marker.setStroke(new BasicStroke(1.5f));
+//        plot.addDomainMarker(marker);
+//
+//        marker = new ValueMarker(8);
+//        marker.setPaint(Color.gray);
+//        marker.setStroke(new BasicStroke(1.5f));
+//        plot.addDomainMarker(marker);
 
         xyplot.setBackgroundPaint(Color.white);
         xyplot.setDomainGridlinePaint(Color.white);
