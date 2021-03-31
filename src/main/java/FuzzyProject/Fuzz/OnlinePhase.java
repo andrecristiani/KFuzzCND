@@ -77,7 +77,7 @@ public class OnlinePhase {
 //                    System.err.println("Verdadeiro: " + exemplo.getRotuloVerdadeiro());
 //                    System.err.println("Classificado: " + exemplo.getRotuloClassificado());
                     erroSeparado++;
-//                    this.ensemble.classifyComErro(ins, i);
+                    double rotuloTeste = this.ensemble.classifyComErro(ins, i);
                 }
                 results.add(exemplo);
                 this.exemplosEsperandoTempo.add(exemplo);
@@ -90,6 +90,7 @@ public class OnlinePhase {
                         }
                         System.out.println("Antes: " + this.ensemble.getAllSPFMiCs().size());
                         labeledMem = this.ensemble.trainNewClassifier(labeledMem, i);
+                        labeledMem.clear();
                         System.out.println("Depois: " + this.ensemble.getAllSPFMiCs().size());
                     }
                     nExeTemp++;

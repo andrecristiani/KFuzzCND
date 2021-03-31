@@ -46,7 +46,7 @@ public class HandlesFiles {
     public static ArrayList<ResultsForExample> loadResults(String caminho, String dataset, String algoritmo, int numAnalises) {
         BufferedReader inReader = null;
         try {
-            inReader = new BufferedReader(new FileReader(caminho + dataset +"-" + algoritmo + "-results.txt"));
+            inReader = new BufferedReader(new FileReader(caminho + dataset +"-" + algoritmo + "-0-results-extrema.txt"));
         } catch (FileNotFoundException var11) {
             System.err.println("carregaParticao - Não foi possível abrir o arquivo: " + caminho);
             System.exit(1);
@@ -58,6 +58,7 @@ public class HandlesFiles {
             ArrayList<ResultsForExample> measures = new ArrayList<>();
             for(int i=0; i<numAnalises; i++) {
                 line = inReader.readLine();
+                System.out.println(line);
                 str = new StringTokenizer(line);
                 String temp = str.nextToken();
                 str.nextToken();
@@ -116,7 +117,7 @@ public class HandlesFiles {
     public static ArrayList<ResultsForExample> loadResults(String caminho, String dataset, String algoritmo, int numAnalises, int execution) {
         BufferedReader inReader = null;
         try {
-            inReader = new BufferedReader(new FileReader(caminho + dataset +"-" + algoritmo + "-" + execution + "-results.txt"));
+            inReader = new BufferedReader(new FileReader(caminho + dataset +"-" + algoritmo + "-" + execution + "-results-2000.txt"));
         } catch (FileNotFoundException var11) {
             System.err.println("carregaParticao - Não foi possível abrir o arquivo: " + caminho);
             System.exit(1);

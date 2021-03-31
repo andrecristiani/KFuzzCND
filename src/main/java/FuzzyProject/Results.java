@@ -29,11 +29,19 @@ public class Results {
 //        }
 
 
-        //synedc
+//        //synedc
 //        String dataset = "synedc";
 //        for(int i=0; i<5; i++) {
 //            resultsFuzzCND.put(i,HandlesFiles.loadResults(caminho, dataset, "FuzzCND", 370000, i));
 //        }
+
+        //kdd
+        String dataset = "kdd";
+        for(int i=0; i<5; i++) {
+            resultsFuzzCND.put(i,HandlesFiles.loadResults(caminho, dataset, "FuzzCND", 445230, i));
+        }
+
+
         //cover
 //        String dataset = "cover";
 //        List<ResultsForExample> resultsFuzzCND = HandlesFiles.loadResults(caminho, dataset, "FuzzCND", 531012);
@@ -43,14 +51,14 @@ public class Results {
 //        List<ResultsForExample> resultsFuzzCND = HandlesFiles.loadResults(caminho, dataset, "FuzzCND", 445230);
 //        List<ResultsForExample> resultsECSMiner = HandlesFiles.loadResults(caminho, dataset, "ECSMiner", 445230);
         //moa
-        String dataset = "moa";
+//        String dataset = "moa";
 //        List<ResultsForExample> resultsFuzzCND = HandlesFiles.loadResults(caminho, dataset, "FuzzCND", 90000);
 //        List<ResultsForExample> resultsECSMiner = HandlesFiles.loadResults(caminho, dataset, "ECSMiner", 90000);
 
-        for(int i=0; i<5; i++) {
-            resultsFuzzCND.put(i,HandlesFiles.loadResults(caminho, dataset, "FuzzCND", 90000, i));
-//            resultsECSMiner.put(i, HandlesFiles.loadResults(caminho, dataset, "ECSMiner", 90000, i));
-        }
+//        for(int i=0; i<5; i++) {
+//            resultsFuzzCND.put(i,HandlesFiles.loadResults(caminho, dataset, "FuzzCND", 90000, i));
+////            resultsECSMiner.put(i, HandlesFiles.loadResults(caminho, dataset, "ECSMiner", 90000, i));
+//        }
 
         int unknown = 0;
         int acertos = 0;

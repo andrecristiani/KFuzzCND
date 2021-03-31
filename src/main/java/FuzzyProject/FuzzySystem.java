@@ -14,7 +14,7 @@ import java.util.List;
 
 public class FuzzySystem {
     public static void main(String[] args) throws IOException, Exception {
-        String dataset = "synedc";
+        String dataset = "moa";
         String caminho = "";
         String current = (new File(".")).getCanonicalPath();
         caminho = current + "/" + dataset + "/";
@@ -35,29 +35,37 @@ public class FuzzySystem {
         //Datasets ok - KDD, MOA, RBF, CoverType
 
 
-//        OfflinePhase offlinePhase = new OfflinePhase();
-//        Ensemble ensemble = offlinePhase.inicializar("moa", current + "/moa/", 6, data1, fuzzyfication, alpha, theta, 2000, 4, 1);
-//        OnlinePhase onlinePhase = new OnlinePhase();
-//        ensemble.N = 2;
-//        onlinePhase.initialize(current + "/moa/", "moa", ensemble, 2000, 500, 40, 4, 0.2, 200, 25);
+        OfflinePhase offlinePhase = new OfflinePhase();
+        Ensemble ensemble = offlinePhase.inicializar("moa", current + "/moa/", 6, data1, fuzzyfication, alpha, theta, 2000, 4, 1);
+        OnlinePhase onlinePhase = new OnlinePhase();
+        ensemble.N = 2;
+        onlinePhase.initialize(current + "/moa/", "moa", ensemble, 100000, 500, 40, 4, 0.2, 200, 25);
 
+        //
 //        OfflinePhase offlinePhase = new OfflinePhase();
 //        Ensemble ensemble = offlinePhase.inicializar("rbf", current + "/rbf/", 6, data1, fuzzyfication, alpha, theta, 2000, 4, 0);
 //        OnlinePhase onlinePhase = new OnlinePhase();
 //        ensemble.N = 2;
-//        onlinePhase.initialize(current + "/rbf/", "rbf", ensemble, 2000, 500, 40, 4, 0.2, 200, 25);
+//        onlinePhase.initialize(current + "/rbf/", "rbf", ensemble, 5000, 500, 40, 4, 0.1, 200, 25);
 
+        //2.000 = phi 0.2
 //        OfflinePhase offlinePhase = new OfflinePhase();
 //        Ensemble ensemble = offlinePhase.inicializar("rbf2", current + "/rbf2/", 6, data1, fuzzyfication, alpha, theta, 2000, 4, 0);
 //        OnlinePhase onlinePhase = new OnlinePhase();
 //        ensemble.N = 2;
 //        onlinePhase.initialize(current + "/rbf2/", "rbf2", ensemble, 2000, 500, 40, 4, 0.2, 200, 25);
 
-        OfflinePhase offlinePhase = new OfflinePhase();
-        Ensemble ensemble = offlinePhase.inicializar("synedc", current + "/synedc/", 6, data1, fuzzyfication, alpha, theta, 30000, 8, 5);
-        OnlinePhase onlinePhase = new OnlinePhase();
-        ensemble.N = 2;
-        onlinePhase.initialize(current + "/synedc/", "synedc", ensemble, 2000, 500, 80, 8, 0.2, 200, 25);
+//        OfflinePhase offlinePhase = new OfflinePhase();
+//        Ensemble ensemble = offlinePhase.inicializar("synedc", current + "/synedc/", 6, data1, fuzzyfication, alpha, theta, 30000, 8, 5);
+//        OnlinePhase onlinePhase = new OnlinePhase();
+//        ensemble.N = 2;
+//        onlinePhase.initialize(current + "/synedc/", "synedc", ensemble, 5000, 500, 80, 8, 0.1, 200, 25);
+
+//        OfflinePhase offlinePhase = new OfflinePhase();
+//        Ensemble ensemble = offlinePhase.inicializar("unsw", current + "/unsw/", 6, data1, fuzzyfication, alpha, theta, 30000, 16, 5);
+//        OnlinePhase onlinePhase = new OnlinePhase();
+//        ensemble.N = 2;
+//        onlinePhase.initialize(current + "/unsw/", "unsw", ensemble, 5000, 500, 40, 4, 0.3, 200, 25);
 
 //        OfflinePhase offlinePhase = new OfflinePhase();
 //        Ensemble ensemble = offlinePhase.inicializar("cover", current + "/cover/", 6, data1, fuzzyfication, alpha, theta, 50000, 16  , 1);
@@ -69,7 +77,7 @@ public class FuzzySystem {
 //        Ensemble ensemble = offlinePhase.inicializar("kdd", current + "/kdd/", 6, data1, fuzzyfication, alpha, theta, 48791, 8, 1);
 //        OnlinePhase onlinePhase = new OnlinePhase();
 //        ensemble.N = 2;
-//        onlinePhase.initialize(current + "/kdd/", "kdd", ensemble, 2000, 1000, 40, 8, 0.2, 1000, 20);
+//        onlinePhase.initialize(current + "/kdd/", "kdd", ensemble, 10000, 1000, 40, 8, 0.1, 200, 20);
 
     }
 }

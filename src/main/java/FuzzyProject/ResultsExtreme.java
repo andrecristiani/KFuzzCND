@@ -5,12 +5,14 @@ import FuzzyProject.Fuzz.Utils.HandlesFiles;
 import FuzzyProject.Fuzz.Utils.LineChart_AWT;
 import org.jfree.ui.RefineryUtilities;
 
-import java.io.File;
 import java.io.IOException;
 import java.text.ParseException;
-import java.util.*;
+import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
 
-public class ResultsOld {
+public class ResultsExtreme {
     public static void main(String[] args) throws IOException, ParseException {
 //        String dataset = "cover";
         String caminho = "";
@@ -32,7 +34,7 @@ public class ResultsOld {
         //moa
         String dataset = "moa";
 //        List<ResultsForExample> resultsFuzzCND = HandlesFiles.loadResults(caminho, dataset, "FuzzCND", 90000);
-        List<ResultsForExample> resultsECSMiner = HandlesFiles.loadResults(caminho, dataset, "ECSMiner", 90000);
+        List<ResultsForExample> resultsECSMiner = HandlesFiles.loadResults(caminho, dataset, "FuzzCND", 90000);
         int unknown = 0;
         int acertos = 0;
         int acertosCount = 0;
@@ -56,44 +58,25 @@ public class ResultsOld {
 
         ArrayList<List<Double>> metricasFuzzCND = new ArrayList<>();
         ArrayList<List<Double>> metricasECSMiner = new ArrayList<>();
+        Map<String, Map<String, Integer>> map = new HashMap<>();
 
-//        for(int i=0, j = 1; i<resultsFuzzCND.size(); j++, i++) {
-//            if(excFuzzCND.containsKey(resultsFuzzCND.get(i).getRealClass())) {
-//                excFuzzCND.replace(resultsFuzzCND.get(i).getRealClass(), excFuzzCND.get(resultsFuzzCND.get(i).getRealClass()) + 1);
-//            } else {
-//                excFuzzCND.put(resultsFuzzCND.get(i).getRealClass(), 1);
-//            }
-//
-//            if(resultsFuzzCND.get(i).getClassifiedClass().equals("unknown")) {
-//                unknown++;
-//                if(unkRiFuzzCND.containsKey(resultsFuzzCND.get(i).getRealClass())) {
-//                    unkRiFuzzCND.replace(resultsFuzzCND.get(i).getRealClass(), unkRiFuzzCND.get(resultsFuzzCND.get(i).getRealClass()) + 1);
-//                } else {
-//                    unkRiFuzzCND.put(resultsFuzzCND.get(i).getRealClass(),1);
-//                }
-//            } else {
-//                if(Double.parseDouble(resultsFuzzCND.get(i).getClassifiedClass()) > 100) {
-//                    novelty++;
-//                } else {
-//                    count++;
-//                    if (resultsFuzzCND.get(i).getClassifiedClass().equals(resultsFuzzCND.get(i).getRealClass())) {
-//                        acertos++;
-//                        acertosCount++;
-//                    } else {
-//                        errors++;
-//                    }
-//                }
-//            }
-//            if(j==1000) {
-//                acuraciasFuzzCND.add(((double)acertosCount/count) * 100);
-//                unkRFuzzCND.add(calculaUnkR(unkRiFuzzCND, excFuzzCND));
-////                acertosCount = 0;
-////                unkRiFuzzCND.clear();
-////                excFuzzCND.clear();
-////                count = 0;
-//                j=0;
-//            }
-//        }
+        for(int i=0, j=1; i<resultsECSMiner.size(); j++, i++) {
+            if(!resultsECSMiner.get(i).getClassifiedClass().equals("unknown")) {
+                if (Double.parseDouble(resultsECSMiner.get(i).getClassifiedClass()) > 100) {
+                    if (!map.containsKey(resultsECSMiner.get(i).getClassifiedClass())) {
+                        Map aux = new HashMap();
+                        aux.put(resultsECSMiner.get(i).getRealClass(), 1);
+                        map.put(resultsECSMiner.get(i).getClassifiedClass(), aux);
+                    } else {
+                        if (map.get(resultsECSMiner.get(i).getClassifiedClass()).containsKey(resultsECSMiner.get(i).getRealClass())) {
+                            map.get(resultsECSMiner.get(i).getClassifiedClass()).replace(resultsECSMiner.get(i).getRealClass(), map.get(resultsECSMiner.get(i).getClassifiedClass()).get(resultsECSMiner.get(i).getRealClass()) + 1);
+                        } else {
+                            map.get(resultsECSMiner.get(i).getClassifiedClass()).put(resultsECSMiner.get(i).getRealClass(), 1);
+                        }
+                    }
+                }
+            }
+        }
 
         for(int i=0, j=1; i<resultsECSMiner.size(); j++, i++) {
             if(excECSMiner.containsKey(resultsECSMiner.get(i).getRealClass())) {
@@ -126,10 +109,6 @@ public class ResultsOld {
             if(j==1000) {
                 acuraciasECSMiner.add(((double)acertosCount/count) * 100);
                 unkRECSMiner.add(calculaUnkR(unkRiECSMiner, excECSMiner));
-//                acertosCount = 0;
-//                unkRECSMiner.clear();
-//                excECSMiner.clear();
-//                count = 0;
                 j=0;
             }
         }
@@ -143,14 +122,6 @@ public class ResultsOld {
 
         metricasECSMiner.add(acuraciasECSMiner);
         metricasECSMiner.add(unkRECSMiner);
-
-//        LineChart_AWT chart2 = new LineChart_AWT(
-//                "" ,
-//                "", metricasFuzzCND, rotulos);
-//
-//        chart2.pack( );
-//        RefineryUtilities.centerFrameOnScreen( chart2 );
-//        chart2.setVisible( true );
 
         LineChart_AWT chart = new LineChart_AWT(
                 "" ,

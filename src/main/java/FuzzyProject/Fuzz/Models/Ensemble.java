@@ -124,10 +124,11 @@ public class Ensemble {
         Map<Double, List<SPFMiC>> classifier = new HashMap<>();
         classes.addAll(examplesByClass.keySet());
         for(int j=0; j<examplesByClass.size(); j++) {
-            if(examplesByClass.get(classes.get(j)).size() >= this.K) {
+            if(examplesByClass.get(classes.get(j)).size() >= this.K * 2) {
                 if(!this.knowLabels.contains(classes.get(j))) {
                     this.knowLabels.add(classes.get(j));
                 }
+                System.out.println("Treinar novo classificador");
                 FuzzyKMeansClusterer clusters = FuzzyFunctions.fuzzyCMeans(examplesByClass.get(classes.get(j)), this.K, this.fuzzification);
                 List<SPFMiC> spfmics = FuzzyFunctions.separateExamplesByClusterClassifiedByFuzzyCMeans(examplesByClass.get(classes.get(j)), clusters, classes.get(j), this.theta, this.alpha, this.minWeight, t);
                 classifier.put(classes.get(j), spfmics);

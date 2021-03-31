@@ -11,7 +11,14 @@ import java.util.*;
 public class FuzzyFunctions {
     public static FuzzyKMeansClusterer fuzzyCMeans(List<Example> examples, int K, double fuzzification) {
         FuzzyKMeansClusterer fuzzyClusterer = new FuzzyKMeansClusterer(K, fuzzification);
-        fuzzyClusterer.cluster(examples);
+        try {
+            System.out.println("Antes");
+            System.out.println("Quantidade de exemplos: " + examples.size());
+            fuzzyClusterer.cluster(examples);
+            System.out.println("Depois");
+        } catch (Exception ex) {
+            System.err.println("Deu algum erro mas continuei");
+        }
         return fuzzyClusterer;
     }
 
