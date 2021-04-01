@@ -7,10 +7,7 @@ import org.jfree.ui.RefineryUtilities;
 
 import java.io.IOException;
 import java.text.ParseException;
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
+import java.util.*;
 
 public class ResultsExtreme {
     public static void main(String[] args) throws IOException, ParseException {
@@ -78,6 +75,23 @@ public class ResultsExtreme {
             }
         }
 
+        List<String> keys = new ArrayList<>();
+        keys.addAll(map.keySet());
+        Map<String, String> rotulosNovidades = new HashMap<>();
+        for(int i=0; i<keys.size(); i++) {
+            List<String> keysAux = new ArrayList<>();
+            keysAux.addAll(map.get(keys.get(i)).keySet());
+            int maiorQuantidade = 0;
+            String rotuloMaior = new String();
+            for(int j=0; j<keysAux.size(); j++) {
+                if(map.get(keys.get(i)).get(keysAux.get(j)) > maiorQuantidade) {
+                    maiorQuantidade = map.get(keys.get(i)).get(keysAux.get(j));
+                    rotuloMaior = keysAux.get(j);
+                }
+            }
+            rotulosNovidades.put(keys.get(i), rotuloMaior);
+        }
+
         for(int i=0, j=1; i<resultsECSMiner.size(); j++, i++) {
             if(excECSMiner.containsKey(resultsECSMiner.get(i).getRealClass())) {
                 excECSMiner.replace(resultsECSMiner.get(i).getRealClass(), excECSMiner.get(resultsECSMiner.get(i).getRealClass()) + 1);
@@ -94,7 +108,11 @@ public class ResultsExtreme {
                 }
             } else {
                 if(Double.parseDouble(resultsECSMiner.get(i).getClassifiedClass()) > 100) {
-                    noveltyECSMiner++;
+                    if(rotulosNovidades.get(resultsECSMiner.get(i).getClassifiedClass()).equals(resultsECSMiner.get(i).getRealClass())) {
+                        acertosECSMiner++;
+                        acertosCount++;
+                        count++;
+                    }
                 } else {
                     count++;
                     if (resultsECSMiner.get(i).getClassifiedClass().equals(resultsECSMiner.get(i).getRealClass())) {
